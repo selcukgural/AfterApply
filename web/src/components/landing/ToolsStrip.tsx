@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { buttonClassName } from "@/components/ui/Button";
@@ -16,7 +16,7 @@ import { offerComparePath } from "@/lib/offerCompare/path";
 
 /**
  * The three things the site offers before asking for an account, one screen under the hero:
- * the CV scan, the Chrome extension and the reply-rate benchmark. A tab group rather than three
+ * the CV scan, the Chrome extension and the reply-rate benchmark. A switcher rather than three
  * flat cards — pick one and its pitch opens underneath with a demo of what it produces — because
  * until 2026-09-12 the extension was one card of six, eight sections down, and nobody scrolling
  * from the hero would meet it.
@@ -35,10 +35,12 @@ import { offerComparePath } from "@/lib/offerCompare/path";
  * hash opens the extension tab, so the link always lands on what it names — the hash is read,
  * never written.
  *
- * Markup follows the WAI-ARIA tabs pattern: the card body is the `role="tab"` button (arrow keys
- * move between tabs, focus roves with the selection), the panel is `role="tabpanel"`, and each
- * card's call to action is a separate link beside the tab rather than inside it — a link inside
- * a button is invalid HTML and unreachable by keyboard.
+ * Markup is a group of toggle buttons (`aria-pressed`) driving one preview region, not the
+ * WAI-ARIA tabs pattern it used until 2026-10-06. Each card carries its own call to action, and a
+ * link cannot sit inside a `tablist` — the tablist may own tabs and nothing else, which both the
+ * accessibility audit and the agent-browsing audit of PageSpeed failed on. The card body is the
+ * button (a link inside a button is invalid HTML and unreachable by keyboard), the link sits
+ * beside it, and every button is in the tab order on its own.
  */
 type Tool = "cv" | "extension" | "benchmark" | "companies" | "offer";
 
@@ -82,7 +84,6 @@ export function ToolsStrip() {
   const [active, setActive] = useState<Tool>("extension");
   const offerIsNew = useSyncExternalStore(noSubscription, offerIsNewNow, offerIsNewOnServer);
   const baseId = useId();
-  const tabRefs = useRef<Partial<Record<Tool, HTMLButtonElement | null>>>({});
 
   useEffect(() => {
     const openFromHash = () => {
@@ -93,26 +94,11 @@ export function ToolsStrip() {
     return () => window.removeEventListener("hashchange", openFromHash);
   }, []);
 
-  const tabId = (tool: Tool) => `${baseId}-tab-${tool}`;
-  const panelId = (tool: Tool) => `${baseId}-panel-${tool}`;
+  const titleId = (tool: Tool) => `${baseId}-title-${tool}`;
+  const panelId = `${baseId}-panel`;
 
-  const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, tool: Tool) => {
-    const index = TOOLS.indexOf(tool);
-    let next: Tool | undefined;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = TOOLS[(index + 1) % TOOLS.length];
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = TOOLS[(index - 1 + TOOLS.length) % TOOLS.length];
-    else if (event.key === "Home") next = TOOLS[0];
-    else if (event.key === "End") next = TOOLS[TOOLS.length - 1];
-    if (!next) return;
-
-    event.preventDefault();
-    setActive(next);
-    tabRefs.current[next]?.focus();
-  };
-
-  const cards: { tool: Tool; pill?: string; badge?: string; title: string; body: string; cta: ReactNode }[] = [
-    {
-      tool: "extension",
+  const cards: Record<Tool, { pill?: string; badge?: string; title: string; body: string; cta: ReactNode }> = {
+    extension: {
       pill: t("extensionPill"),
       title: t("extensionTitle"),
       body: t("extensionBody"),
@@ -128,8 +114,7 @@ export function ToolsStrip() {
         </a>
       ),
     },
-    {
-      tool: "companies",
+    companies: {
       title: t("companiesTitle"),
       body: t("companiesBody"),
       cta: (
@@ -138,8 +123,7 @@ export function ToolsStrip() {
         </Link>
       ),
     },
-    {
-      tool: "benchmark",
+    benchmark: {
       title: t("benchmarkTitle"),
       body: t("benchmarkBody"),
       cta: (
@@ -148,8 +132,7 @@ export function ToolsStrip() {
         </Link>
       ),
     },
-    {
-      tool: "offer",
+    offer: {
       badge: offerIsNew ? t("newBadge") : undefined,
       title: t("offerTitle"),
       body: t("offerBody"),
@@ -159,8 +142,7 @@ export function ToolsStrip() {
         </Link>
       ),
     },
-    {
-      tool: "cv",
+    cv: {
       title: t("cvTitle"),
       body: t("cvBody"),
       cta: (
@@ -169,7 +151,7 @@ export function ToolsStrip() {
         </Link>
       ),
     },
-  ];
+  };
 
   return (
     <section id="extension" className="scroll-mt-20 border-t border-gray-200 py-12 dark:border-gray-800">
@@ -180,19 +162,17 @@ export function ToolsStrip() {
             one strip. The heading says it once, where it covers all four. */}
         <h2 className="text-sm font-medium text-accent-ink">{t("title")}</h2>
 
-        <div role="tablist" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          {cards.map((card) => {
-            const selected = card.tool === active;
+        <div role="group" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+          {TOOLS.map((tool) => {
+            const card = cards[tool];
+            const selected = tool === active;
             return (
-              // The whole card is the click target so the tab is as big as it looks; the button
-              // inside is what carries the role, the focus and the keyboard handling.
+              // The whole card is the click target so the button is as big as it looks; the button
+              // inside is what carries the state and the focus.
               <div
-                key={card.tool}
-                // The wrapper sits between the tablist and its tab; without this the tree reads
-                // "a tablist whose children are not tabs" (growth audit 2026-09-14, finding 14).
-                role="presentation"
-                onClick={() => setActive(card.tool)}
-                className={`relative flex cursor-pointer flex-col gap-3 rounded-xl border bg-white p-6 transition-shadow dark:bg-gray-900 ${CARD_SPAN[card.tool]} ${
+                key={tool}
+                onClick={() => setActive(tool)}
+                className={`relative flex cursor-pointer flex-col gap-3 rounded-xl border bg-white p-6 transition-shadow dark:bg-gray-900 ${CARD_SPAN[tool]} ${
                   selected
                     ? "border-accent/60 ring-[3px] ring-accent-wash"
                     : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
@@ -200,7 +180,7 @@ export function ToolsStrip() {
               >
                 <div className="flex items-center justify-between">
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-wash text-accent-ink">
-                    <LandingIcon name={ICON[card.tool]} />
+                    <LandingIcon name={ICON[tool]} />
                   </span>
                   {/* Only where it says something the card does not: the extension card names
                       the two sites it has its own code for. */}
@@ -215,18 +195,13 @@ export function ToolsStrip() {
 
                 <button
                   type="button"
-                  role="tab"
-                  id={tabId(card.tool)}
-                  aria-selected={selected}
-                  aria-controls={panelId(card.tool)}
-                  tabIndex={selected ? 0 : -1}
-                  ref={(node) => {
-                    tabRefs.current[card.tool] = node;
-                  }}
-                  onKeyDown={(event) => onTabKeyDown(event, card.tool)}
+                  aria-pressed={selected}
+                  aria-controls={panelId}
                   className="flex flex-col items-start gap-1 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                 >
-                  <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">{card.title}</span>
+                  <span id={titleId(tool)} className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {card.title}
+                  </span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">{card.body}</span>
                 </button>
 
@@ -244,9 +219,9 @@ export function ToolsStrip() {
         </div>
 
         <div
-          role="tabpanel"
-          id={panelId(active)}
-          aria-labelledby={tabId(active)}
+          role="region"
+          id={panelId}
+          aria-labelledby={titleId(active)}
           // grid-cols-1 on a phone, not the implicit track: an implicit column sizes to its widest
           // child, and the extension demo's address bar made it ~400px on a 390px screen (the page
           // scrolled sideways; found 2026-09-24).

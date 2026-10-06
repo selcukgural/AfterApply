@@ -83,12 +83,18 @@ describe("the tools strip", () => {
     expect(source).toContain('["extension", "companies", "benchmark", "offer", "cv"]');
   });
 
-  it("is a tab group, not three links", () => {
-    expect(source).toContain('role="tablist"');
-    expect(source).toContain('role="tab"');
-    expect(source).toContain('role="tabpanel"');
-    expect(source).toContain("aria-selected={selected}");
-    expect(source).toContain("aria-controls=");
+  /** Toggle buttons driving one region, not a tablist (PageSpeed 2026-10-06): every card carries
+   *  its own call to action, and a tablist may own tabs and nothing else, so the links beside the
+   *  tabs failed both the accessibility and the agent-browsing audit. */
+  it("is a group of toggle buttons driving one region, not three links", () => {
+    expect(source).toContain('role="group"');
+    expect(source).toContain("aria-pressed={selected}");
+    expect(source).toContain("aria-controls={panelId}");
+    expect(source).toContain('role="region"');
+  });
+
+  it("keeps the links out of any role that may own only certain children", () => {
+    expect(source).not.toMatch(/role="(tablist|tab|tabpanel|radiogroup|listbox|menu)"/);
   });
 
   /** The open tab is React state and nothing else: a query parameter would put state into the

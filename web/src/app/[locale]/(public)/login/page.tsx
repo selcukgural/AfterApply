@@ -115,7 +115,7 @@ export default function LoginPage() {
             </form>
             <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
               {t("noAccount")}{" "}
-              <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
+              <Link href="/register" className="text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                 {t("registerLink")}
               </Link>
             </p>

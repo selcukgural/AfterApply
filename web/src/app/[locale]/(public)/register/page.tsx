@@ -182,12 +182,12 @@ export default function RegisterPage() {
                   <>
                   {t.rich("consent", {
                       privacy: (chunks) => (
-                        <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                        <Link href="/privacy" target="_blank" className="text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                           {chunks}
                         </Link>
                       ),
                       terms: (chunks) => (
-                        <Link href="/terms" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                        <Link href="/terms" target="_blank" className="text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                           {chunks}
                         </Link>
                       ),
@@ -202,7 +202,7 @@ export default function RegisterPage() {
             </form>
             <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
               {t("haveAccount")}{" "}
-              <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">
+              <Link href="/login" className="text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                 {t("loginLink")}
               </Link>
             </p>

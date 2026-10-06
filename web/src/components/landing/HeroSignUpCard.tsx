@@ -55,7 +55,7 @@ export function HeroSignUpCard() {
         </Link>
         <p className="text-gray-600 dark:text-gray-400">
           {t("haveAccount")}{" "}
-          <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">
+          <Link href="/login" className="text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
             {t("signIn")}
           </Link>
         </p>

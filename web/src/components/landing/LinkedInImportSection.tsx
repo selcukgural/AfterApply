@@ -40,7 +40,7 @@ export async function LinkedInImportSection() {
         <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("resultLabel")}</p>
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
               {tCommon("sampleData")}
             </span>
           </div>
