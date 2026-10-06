@@ -178,6 +178,8 @@ export function SalaryTrendChart({ years }: { years: readonly SalaryOccupationYe
                 height={PLOT.height - PLOT.bottom + 20}
                 fill="transparent"
                 tabIndex={0}
+                // A labelled SVG shape needs a role for the label to count (axe aria-prohibited-attr).
+                role="img"
                 aria-label={t("yearLabel", { year: year.year, median: formatStat(year.overall, "p50", locale), count: year.overall.count })}
                 onMouseEnter={() => setHover(index)}
                 onFocus={() => setHover(index)}
@@ -236,7 +238,7 @@ export function SalaryTrendChart({ years }: { years: readonly SalaryOccupationYe
           if (yearChange === null) return null;
           return (
             <li key={year.year} className="rounded-md bg-gray-100 px-2.5 py-1.5 text-sm tabular-nums dark:bg-gray-800">
-              <span className="text-gray-500 dark:text-gray-400">{year.year}</span>{" "}
+              <span className="text-gray-600 dark:text-gray-400">{year.year}</span>{" "}
               <strong className="font-semibold text-good-ink">{formatChange(yearChange, locale)}</strong>
             </li>
           );

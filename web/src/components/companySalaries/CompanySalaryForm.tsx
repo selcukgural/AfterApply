@@ -195,7 +195,7 @@ export function CompanySalaryForm({ companyName, initialDraft, submitLabel, onSu
               </option>
             ))}
           </Select>
-          <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">
+          <span className="text-gray-400 dark:text-gray-450" aria-hidden="true">
             –
           </span>
           {isFormer ? (

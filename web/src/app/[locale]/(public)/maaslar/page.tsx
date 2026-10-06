@@ -90,7 +90,7 @@ export default async function SalaryMarketPage({ params }: PageProps<"/[locale]/
       {/* Canvas variant A (2026-09-29): the figures as a band of their own, the chart at full width
           and the source at the foot of the page — the old source box ran twice the chart's height. */}
       <header className="flex max-w-[70ch] flex-col gap-3">
-        <p className="text-xs font-semibold tracking-wider text-accent uppercase">{t("eyebrow")}</p>
+        <p className="text-xs font-semibold tracking-wider text-accent uppercase dark:text-accent-ink">{t("eyebrow")}</p>
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
           {t("title", { first: years.first, last: years.last })}
         </h1>
@@ -115,7 +115,7 @@ export default async function SalaryMarketPage({ params }: PageProps<"/[locale]/
       >
         <div className={stat}>
           <dt className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("statResponses")}</dt>
-          <dd className={`${statNumber} order-first text-accent`}>{format.format(total)}</dd>
+          <dd className={`${statNumber} order-first text-accent dark:text-accent-ink`}>{format.format(total)}</dd>
           <dd className="text-sm text-gray-500 dark:text-gray-400">{t("statResponsesNote", { years: allYears.length })}</dd>
         </div>
         <div className={stat}>

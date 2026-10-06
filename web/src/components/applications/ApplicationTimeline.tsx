@@ -99,7 +99,7 @@ function StatusRow({
         {entry.fromStatus && (
           <>
             <StatusBadge status={entry.fromStatus} />
-            <span aria-hidden className="text-xs text-gray-400 dark:text-gray-500">
+            <span aria-hidden className="text-xs text-gray-400 dark:text-gray-450">
               →
             </span>
           </>

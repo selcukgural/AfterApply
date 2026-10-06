@@ -60,7 +60,7 @@ export function LinkedInArchiveDiagram({ labels }: { labels: LinkedInArchiveDiag
       >
         <p className="font-semibold text-gray-700 dark:text-gray-300">{labels.heading}</p>
 
-        <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-500">
+        <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-450">
           <RadioMark selected={false} />
           <span className="flex-1 line-through decoration-gray-300 dark:decoration-gray-600">{labels.fullOption}</span>
           <span className="flex items-center gap-1 whitespace-nowrap">
@@ -82,11 +82,11 @@ export function LinkedInArchiveDiagram({ labels }: { labels: LinkedInArchiveDiag
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pl-6">
-            <span className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1 text-gray-400 dark:border-gray-700 dark:text-gray-500">
+            <span className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1 text-gray-400 dark:border-gray-700 dark:text-gray-450">
               <CheckboxMark checked={false} />
               {labels.otherOption1}
             </span>
-            <span className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1 text-gray-400 dark:border-gray-700 dark:text-gray-500">
+            <span className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1 text-gray-400 dark:border-gray-700 dark:text-gray-450">
               <CheckboxMark checked={false} />
               {labels.otherOption2}
             </span>

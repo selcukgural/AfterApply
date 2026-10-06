@@ -41,7 +41,7 @@ export function OfferCompareMock({ className = "" }: { className?: string }) {
                     className={`flex items-end justify-center bg-accent pb-1 ${month.bonus > 0 ? "" : "rounded-t-sm"}`}
                     style={{ height: ((month.net - month.bonus) / scale) * BAR_HEIGHT }}
                   >
-                    <span className="text-[10px] font-semibold text-white tabular-nums dark:text-gray-950">
+                    <span className="text-[10px] font-semibold text-white tabular-nums">
                       {formatNumber(month.net / 1000, locale)}
                     </span>
                   </div>

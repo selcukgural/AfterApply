@@ -10668,6 +10668,15 @@ PageSpeed (mobil, /en): Erişilebilirlik 89, Ajan Tabanlı Tarama 1/2. Hepsi ana
   ve onay metni linkleri. Mavi-gri farkı 1,44:1, 3:1 şartı renk dışı bir ipucu istiyor.
   Uygulamadaki aynı kalıptaki diğer linkler bu değişikliğin kapsamında değil.
 - **Logo işareti:** 128 px WebP (6 KB) yerine 48 px (1,6 KB) + 3x ekran için 72 px, `srcset` ile.
+- **Koyu tema (aynı gün, tuval "Koyu tema kontrast", seçim A + 2):** PageSpeed açık temayla
+  ölçtüğü için görmüyordu; canlıda 10 sayfa koyu temada tarandı. Ana düğmelerde beyaz yazı
+  `#3d7ce0` üzerinde 4,07:1 (üzerine gelince açılan `#5590ea`'da 3,20:1) idi → koyu `--accent`
+  `#2f6ad9` (5,02:1), `--accent-strong` `#2a5fd6` (5,67:1); üzerine gelince artık koyulaşıyor.
+  Koyu temada mavi *metin* `accent-ink` kullanır (üst başlıklar, maaş sayısı, anket seçimi,
+  kopyala/dış link hover'ı) — `accent` dolgu rengidir. Teklif grafiği etiketleri koyu temada da
+  beyaz. Üçüncül metin `dark:text-gray-500` (kartta 3,67:1) → yeni `gray-450` `#878f9f` (sayfada
+  6,19, kartta 5,46, gray-800 etikette 4,51); gray-400 ikincil metin tonu olduğu için kademe
+  kaybolacaktı. `darkThemeContrast.contract.test.ts` değerleri globals.css'ten okuyup kontrol eder.
 - **Bilerek dokunulmayanlar (puanlanmıyor):** render-blocking CSS (Next'in kendi CSS'i;
   `inlineCss` her sayfaya 21 KB ekler, ayrı karar), "Legacy JavaScript" (Next'in her zaman
   gönderdiği polyfill modülü, ayarlanamıyor), "kullanılmayan preconnect" (gerçek tarayıcıda API

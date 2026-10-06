@@ -96,7 +96,7 @@ export function CommentForm({ label, placeholder, submitLabel, initialValue = ""
               {busy ? t("sending") : submitLabel}
             </Button>
           </div>
-          <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-500" aria-live="polite">
+          <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-450" aria-live="polite">
             {t("counter", { count: content.trim().length, max: COMMENT_MAX_LENGTH })}
           </span>
         </div>

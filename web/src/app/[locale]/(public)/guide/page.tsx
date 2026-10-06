@@ -82,7 +82,7 @@ export default async function GuideIndexPage({ params, searchParams }: PageProps
                 </Link>
               </h2>
               {guide.excerpt && <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{guide.excerpt}</p>}
-              <time dateTime={guide.updatedAt} className="text-xs text-gray-500 dark:text-gray-500">
+              <time dateTime={guide.updatedAt} className="text-xs text-gray-500 dark:text-gray-450">
                 {formatArticleDate(guide.updatedAt.slice(0, 10), locale)}
               </time>
             </div>
