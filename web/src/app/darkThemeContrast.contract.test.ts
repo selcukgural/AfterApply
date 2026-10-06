@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -50,10 +50,10 @@ describe("dark theme", () => {
   it("uses gray-450, not gray-500, for dark-mode text", () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
-      for (const entry of readdirSync(dir)) {
-        const full = path.join(dir, entry);
-        if (statSync(full).isDirectory()) walk(full);
-        else if (/\.tsx?$/.test(entry) && !entry.includes(".test.") && readFileSync(full, "utf8").includes("dark:text-gray-500")) {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (/\.tsx?$/.test(entry.name) && !entry.name.includes(".test.") && readFileSync(full, "utf8").includes("dark:text-gray-500")) {
           offenders.push(path.relative(process.cwd(), full));
         }
       }
