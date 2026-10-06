@@ -21,7 +21,7 @@ export function CopyButton({ value, label }: CopyButtonProps) {
       onClick={() => void copy(value)}
       title={copied ? t("copied") : label}
       aria-label={label}
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-accent dark:hover:bg-gray-800"
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-accent dark:hover:bg-gray-800 dark:hover:text-accent-ink"
     >
       {copied ? (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" className="size-3.5 text-emerald-600">

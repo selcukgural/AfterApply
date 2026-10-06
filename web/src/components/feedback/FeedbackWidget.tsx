@@ -330,7 +330,7 @@ export function FeedbackWidget() {
               )}
 
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-500">
+                <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-450">
                   {characterCount} / {FEEDBACK_MESSAGE_MAX_LENGTH}
                 </span>
                 <button

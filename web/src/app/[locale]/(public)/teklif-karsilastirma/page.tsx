@@ -46,7 +46,7 @@ export default async function OfferComparePage({ params }: PageProps<"/[locale]/
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12">
       <header className="flex flex-col gap-3">
-        <p className="text-xs font-semibold tracking-wider text-accent uppercase">{t("eyebrow")}</p>
+        <p className="text-xs font-semibold tracking-wider text-accent uppercase dark:text-accent-ink">{t("eyebrow")}</p>
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">{t("title")}</h1>
         <p className="max-w-[62ch] text-lg text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
       </header>

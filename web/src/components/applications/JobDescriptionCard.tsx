@@ -63,7 +63,7 @@ export function JobDescriptionCard({ descriptionHtml, openOnArrival = false }: J
     <div id={ANCHOR} className="scroll-mt-20 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h2>
-        <span className="text-xs text-gray-500 dark:text-gray-500">{t("source")}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-450">{t("source")}</span>
       </div>
 
       <div className="relative overflow-hidden" style={{ maxHeight: expanded ? "none" : "180px" }}>

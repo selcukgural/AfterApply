@@ -87,7 +87,14 @@ export async function SalaryYearsTable({ years }: { years: readonly SalaryOccupa
   const cell = "px-4 py-2.5 text-right whitespace-nowrap tabular-nums";
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    // Focusable and named so a keyboard can scroll it on a phone, where the table is wider than the
+    // screen and holds nothing else to focus (axe scrollable-region-focusable).
+    <div
+      role="region"
+      aria-label={t("caption")}
+      tabIndex={0}
+      className="overflow-x-auto rounded-xl border border-gray-200 bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent dark:border-gray-800 dark:bg-gray-900"
+    >
       <table className="w-full min-w-[36rem] text-sm">
         <caption className="sr-only">{t("caption")}</caption>
         <thead className="bg-gray-50 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:bg-gray-950 dark:text-gray-400">

@@ -313,7 +313,7 @@ export function CvManager() {
             } ${canUpload ? "" : "pointer-events-none opacity-60"}`}
           >
             <span className="text-sm text-gray-600 dark:text-gray-400">{t("dropzone.idle")}</span>
-            <span className="text-xs text-gray-500 dark:text-gray-500">{t("dropzone.hint")}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-450">{t("dropzone.hint")}</span>
           </label>
         </div>
 

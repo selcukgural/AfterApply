@@ -155,7 +155,7 @@ export async function SiteFooter() {
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-gray-500 dark:text-gray-500">
+      <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-gray-500 dark:text-gray-450">
         © {year} e-kariyerim. {t("rights")}
       </p>
     </footer>

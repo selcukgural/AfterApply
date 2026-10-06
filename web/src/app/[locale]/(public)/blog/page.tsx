@@ -116,7 +116,7 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
                 )}
               </Link>
               <div className="flex min-w-0 flex-col gap-2">
-                <time dateTime={post.publishedAt} className="text-xs text-gray-500 dark:text-gray-500">
+                <time dateTime={post.publishedAt} className="text-xs text-gray-500 dark:text-gray-450">
                   {formatArticleDate(post.publishedAt.slice(0, 10), locale)}
                 </time>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">

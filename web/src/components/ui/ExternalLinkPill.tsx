@@ -55,7 +55,7 @@ export function ExternalLinkPill({ href, label, icon, title, kind = "url" }: Ext
       target={isMail ? undefined : "_blank"}
       rel={isMail ? undefined : "noreferrer"}
       title={title}
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 transition-colors hover:border-accent hover:text-accent dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-accent"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 transition-colors hover:border-accent hover:text-accent dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-accent dark:hover:text-accent-ink"
     >
       {ICONS[icon]}
       <span className="truncate">{label}</span>

@@ -263,7 +263,7 @@ export default function AdminMetricsPage() {
                       <td className="py-2 pr-4 tabular-nums text-gray-600 dark:text-gray-400">
                         {formatCount(bucket.reverted, locale)}
                       </td>
-                      <td className="py-2 pr-4 tabular-nums text-gray-500 dark:text-gray-500">
+                      <td className="py-2 pr-4 tabular-nums text-gray-500 dark:text-gray-450">
                         {rateOrDash(bucket.agreementRate, locale)}
                       </td>
                       {/* The one to read. Emphasised over the column left of it on purpose. */}

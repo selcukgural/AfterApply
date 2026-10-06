@@ -103,7 +103,7 @@ function StepNumber({ number, active }: { number: number; active: boolean }) {
   return (
     <span
       className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold ${
-        active ? "border-accent text-accent" : "border-gray-300 text-gray-500 dark:border-gray-700 dark:text-gray-400"
+        active ? "border-accent text-accent dark:text-accent-ink" : "border-gray-300 text-gray-500 dark:border-gray-700 dark:text-gray-400"
       }`}
       aria-hidden="true"
     >

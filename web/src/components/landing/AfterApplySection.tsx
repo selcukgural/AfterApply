@@ -97,7 +97,7 @@ export async function AfterApplySection() {
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                     {i + 2}
                   </span>
-                  <span className="text-gray-500 dark:text-gray-500">{t("silentWaiting")}</span>
+                  <span className="text-gray-500 dark:text-gray-450">{t("silentWaiting")}</span>
                 </li>
               ))}
               <li className="flex items-center gap-3 text-sm">
@@ -110,7 +110,7 @@ export async function AfterApplySection() {
           </div>
         </div>
 
-        <p className="mx-auto max-w-2xl text-center text-sm text-gray-500 dark:text-gray-500">{t("note")}</p>
+        <p className="mx-auto max-w-2xl text-center text-sm text-gray-500 dark:text-gray-450">{t("note")}</p>
       </ScrollReveal>
     </section>
   );

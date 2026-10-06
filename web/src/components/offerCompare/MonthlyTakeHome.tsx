@@ -94,7 +94,7 @@ export function MonthlyTakeHome({ offers, comparison, chartIndex, onChartIndexCh
                         style={{ height: baseHeight }}
                       >
                         {inside && (
-                          <span className="text-xs font-semibold text-white tabular-nums dark:text-gray-950">{label}</span>
+                          <span className="text-xs font-semibold text-white tabular-nums">{label}</span>
                         )}
                       </div>
                     </div>
@@ -147,7 +147,7 @@ export function MonthlyTakeHome({ offers, comparison, chartIndex, onChartIndexCh
                     style={{ width: `${baseShare * 100}%` }}
                   >
                     {inside && (
-                      <span className="text-[13px] font-semibold whitespace-nowrap text-white tabular-nums dark:text-gray-950">{label}</span>
+                      <span className="text-[13px] font-semibold whitespace-nowrap text-white tabular-nums">{label}</span>
                     )}
                   </div>
                   {month.bonus > 0 && (

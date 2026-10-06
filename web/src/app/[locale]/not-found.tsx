@@ -34,7 +34,7 @@ export default async function NotFoundPage() {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-4 py-20">
         <div className="flex w-full max-w-lg flex-col items-start gap-6">
-          <span className="font-mono text-sm text-gray-500 dark:text-gray-500">404</span>
+          <span className="font-mono text-sm text-gray-500 dark:text-gray-450">404</span>
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{t("title")}</h1>
           <p className="text-gray-600 dark:text-gray-400">{t("body")}</p>
           <ul className="flex flex-wrap gap-2">

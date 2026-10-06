@@ -122,7 +122,7 @@ export function ContributionQuotaTiles({ tiles }: { tiles: ContributionTile[] })
               ) : (
                 <Link href={tile.href} className="flex min-h-14 items-center gap-3 px-3.5 hover:bg-accent-wash">
                   {body}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 dark:text-gray-450" aria-hidden="true">
                     <path d="M9 6l6 6-6 6" />
                   </svg>
                 </Link>

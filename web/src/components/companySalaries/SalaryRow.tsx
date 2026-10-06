@@ -71,7 +71,7 @@ export function SalaryRow({ entry, footer }: { entry: CompanySalaryPublic; foote
             {t("bonus", { amount: formatAmount(locale, entry.annualBonusAmount, entry.currency) })}
           </span>
         ) : (
-          <span className="text-xs text-gray-400 dark:text-gray-500">{t("noBonus")}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-450">{t("noBonus")}</span>
         )}
       </div>
       {footer ? <div className="basis-full">{footer}</div> : null}

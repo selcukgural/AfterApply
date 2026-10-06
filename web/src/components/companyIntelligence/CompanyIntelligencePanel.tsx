@@ -168,7 +168,7 @@ function Figures({ data }: { data: CompanyIntelligenceResponse }) {
           <div key={item.label} className="flex flex-col gap-0.5">
             <span className="text-xs text-gray-500 dark:text-gray-400">{item.label}</span>
             <span className="text-lg font-semibold text-gray-900 tabular-nums dark:text-gray-100">{item.value}</span>
-            {item.hint && <span className="text-[11px] text-gray-500 dark:text-gray-500">{item.hint}</span>}
+            {item.hint && <span className="text-[11px] text-gray-500 dark:text-gray-450">{item.hint}</span>}
           </div>
         ))}
       </div>

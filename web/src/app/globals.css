@@ -34,6 +34,12 @@
   --color-muted-ink: var(--muted-ink);
   --color-muted-wash: var(--muted-wash);
   --color-track: var(--track);
+
+  /* One step between gray-400 and gray-500, for dark-mode tertiary text (dates, the copyright
+     line, "or" dividers, quiet status chips). gray-500 is 4.16:1 on the dark page and 3.67:1 on
+     a dark card; gray-400 passes but is already the secondary text tone, so the step would
+     vanish. #878f9f clears 4.5:1 on gray-950, gray-900 and a gray-800 chip (2026-10-06). */
+  --color-gray-450: #878f9f;
 }
 
 :root {
@@ -65,8 +71,11 @@
 }
 
 .dark {
-  --accent: #3d7ce0;
-  --accent-strong: #5590ea;
+  /* Darker than it was (#3d7ce0 / #5590ea) so white button text clears 4.5:1 — 5.02 and 5.67 —
+     and hover now darkens instead of lightening (2026-10-06). As text on the dark page, use
+     accent-ink: this accent is a fill, not a text colour. */
+  --accent: #2f6ad9;
+  --accent-strong: #2a5fd6;
   --accent-ink: #8ab4f2;
   --accent-wash: #14243f;
   --good: #1aa877;

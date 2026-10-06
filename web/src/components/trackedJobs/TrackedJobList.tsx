@@ -123,7 +123,7 @@ export function TrackedJobList({ items, onDelete, onConvert }: TrackedJobListPro
                 </div>
               )}
               {item.notes && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.notes}</p>}
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-450">
                 {t("addedAt", { date: new Date(item.addedAt).toLocaleDateString(locale) })}
               </p>
             </div>

@@ -23,7 +23,7 @@ export async function SiteStatsStrip({ heading = false }: { heading?: boolean })
 
   const line = (
     <p className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
-      {!heading ? <span className="text-gray-500 dark:text-gray-500">{t("soFar")}</span> : null}
+      {!heading ? <span className="text-gray-500 dark:text-gray-450">{t("soFar")}</span> : null}
       {figures.map((figure) => (
         <span key={figure.key}>
           <span className="text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-100">{formatCount(figure.count, locale)}</span>{" "}

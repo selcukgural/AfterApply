@@ -51,7 +51,7 @@ export function BlogArticle({ post, url, inert = false, comments, renderedAt }: 
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{post.title}</h1>
         {post.excerpt && <p className="text-lg leading-7 text-gray-600 dark:text-gray-400">{post.excerpt}</p>}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-450">
           <time dateTime={post.publishedAt}>{t("publishedOn", { date: formatArticleDate(post.publishedAt.slice(0, 10), locale) })}</time>
           {updated && (
             <time dateTime={post.updatedAt}>{t("updatedOn", { date: formatArticleDate(post.updatedAt.slice(0, 10), locale) })}</time>

@@ -155,7 +155,7 @@ export function LinkedInImportUploader() {
         />
         <svg
           viewBox="0 0 24 24"
-          className="h-8 w-8 text-gray-400 dark:text-gray-500"
+          className="h-8 w-8 text-gray-400 dark:text-gray-450"
           fill="none"
           stroke="currentColor"
           strokeWidth={1.75}

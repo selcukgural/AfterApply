@@ -167,7 +167,7 @@ export function PreferencesMenu() {
       >
         <GlobeIcon />
         {locale.toUpperCase()}
-        <span className="text-gray-400 dark:text-gray-500">
+        <span className="text-gray-400 dark:text-gray-450">
           <ThemeIcon theme={theme} className="h-3.5 w-3.5" />
         </span>
       </button>

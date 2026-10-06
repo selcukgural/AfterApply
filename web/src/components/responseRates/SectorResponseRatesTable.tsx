@@ -79,7 +79,7 @@ function Counts({ data }: { data: SectorResponseRatesResponse }) {
   const { visible, hidden } = splitSectorRows(data.sectors);
   const updated = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(data.windowEnd));
   return (
-    <p className="text-xs text-gray-500 dark:text-gray-500">
+    <p className="text-xs text-gray-500 dark:text-gray-450">
       {t("updated", { date: updated })} · {t("counts", { visible: visible.length, hidden: hidden.length })}
     </p>
   );
@@ -149,9 +149,9 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
               );
             })}
             {hidden.map((row) => (
-              <tr key={row.sector} className="border-b border-gray-100 text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-500">
-                <th scope="row" className={`${CELL} text-left font-normal text-gray-500 dark:text-gray-500`}>{tSectors(row.sector)}</th>
-                <td colSpan={8} className={`${CELL} text-right text-xs text-gray-500 dark:text-gray-500`}>
+              <tr key={row.sector} className="border-b border-gray-100 text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-450">
+                <th scope="row" className={`${CELL} text-left font-normal text-gray-500 dark:text-gray-450`}>{tSectors(row.sector)}</th>
+                <td colSpan={8} className={`${CELL} text-right text-xs text-gray-500 dark:text-gray-450`}>
                   {t("belowThreshold", { contributors: thresholds.minimumContributors, applications: thresholds.minimumApplications })}
                 </td>
               </tr>
@@ -159,7 +159,7 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col gap-1 border-t border-gray-200 px-4 py-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-500">
+      <div className="flex flex-col gap-1 border-t border-gray-200 px-4 py-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-450">
         <span>{t("shareRule", { share: thresholds.maxContributorSharePercent })}</span>
         <span>{t("subRateRule")}</span>
         {data.unclassifiedApplications > 0 && <span>{t("unclassified", { count: data.unclassifiedApplications })}</span>}
@@ -173,7 +173,7 @@ function HiddenNote({ hidden, data }: { hidden: SectorResponseRateRow[]; data: S
   const tSectors = useTranslations("benchmark.sectors");
   if (hidden.length === 0) return null;
   return (
-    <p className="text-xs text-gray-500 dark:text-gray-500">
+    <p className="text-xs text-gray-500 dark:text-gray-450">
       {t("hiddenList", { count: hidden.length, sectors: hidden.map((row) => tSectors(row.sector)).join(", ") })}
       {data.unclassifiedApplications > 0 && <> {t("unclassified", { count: data.unclassifiedApplications })}</>}
     </p>
