@@ -37,7 +37,7 @@ export function SocialSignIn({ onStart }: { onStart?: () => void } = {}) {
       <LinkedInSignInButton onStart={onStart} />
       <GoogleSignInButton onStart={onStart} />
       <GitHubSignInButton onStart={onStart} />
-      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
+      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
         <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
         {t("or")}
         <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />

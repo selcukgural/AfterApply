@@ -59,7 +59,7 @@ export async function AnalyticsSection() {
         <div className="flex flex-col gap-3 text-center">
           <div className="flex items-center justify-center gap-2">
             <span className="text-sm font-medium text-accent-ink">{t("eyebrow")}</span>
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
               {tCommon("sampleData")}
             </span>
           </div>

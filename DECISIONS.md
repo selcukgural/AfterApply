@@ -10650,3 +10650,26 @@ deneyiminde hâlâ 10'da kaldı. Override (2026-09-12) yalnızca değerlendirmey
   Admin override'ı bu sınırı **kaldırmaz**: override hacim hakkıdır, bu sınır şirketin rakamlarının
   kime ait olduğuyla ilgili. Eski kayıtlar dokunulmadan kalır (sınır yalnızca yeni kayıtta
   bakılır); düzenleme serbest. Değer `/api/config`'te (`maxEntriesPerCompanyPerUser`, eklemeli alan).
+
+## PageSpeed erişilebilirlik + ajan taraması düzeltmeleri — DECIDED (2026-10-06)
+
+PageSpeed (mobil, /en): Erişilebilirlik 89, Ajan Tabanlı Tarama 1/2. Hepsi ana sayfadan.
+
+- **Araç şeridi artık sekme değil, toggle-buton grubu.** `role="tablist"` yalnızca `tab`
+  sahiplenebilir; her kartın yanındaki CTA linkleri (Add to Chrome, Browse companies, Compare…)
+  listenin içinde kaldığı için `aria-required-children` düştü — ajan taramasındaki tek hata da
+  buydu. 2026-09-14'teki `role="presentation"` sarmalayıcı linkleri kurtarmıyordu. Yeni yapı:
+  `role="group"` + her kart başlığı `aria-pressed` buton + tek `role="region"` önizleme (o anki
+  aracın başlığıyla etiketli). Ok tuşu/roving tabindex kalktı; her buton kendi Tab durağı.
+  Görünüm değişmedi.
+- **Kontrast:** "VEYA" ayırıcısı gray-400 → gray-500 (koyu: gray-500 → gray-400); "Örnek veri"
+  rozetleri gray-500 → gray-600 (gray-100 zeminde 4,39 idi).
+- **Cümle içi linkler altı çizili:** kayıt kartı, /login ve /register'daki "Giriş yap / Kayıt ol"
+  ve onay metni linkleri. Mavi-gri farkı 1,44:1, 3:1 şartı renk dışı bir ipucu istiyor.
+  Uygulamadaki aynı kalıptaki diğer linkler bu değişikliğin kapsamında değil.
+- **Logo işareti:** 128 px WebP (6 KB) yerine 48 px (1,6 KB) + 3x ekran için 72 px, `srcset` ile.
+- **Bilerek dokunulmayanlar (puanlanmıyor):** render-blocking CSS (Next'in kendi CSS'i;
+  `inlineCss` her sayfaya 21 KB ekler, ayrı karar), "Legacy JavaScript" (Next'in her zaman
+  gönderdiği polyfill modülü, ayarlanamıyor), "kullanılmayan preconnect" (gerçek tarayıcıda API
+  bağlantısı hidrasyondan sonra bu soketi kullanıyor; Lighthouse izinde istek görmemiş),
+  "valid-source-maps" (kaynak haritaları yalnızca Sentry'ye yükleniyor).
