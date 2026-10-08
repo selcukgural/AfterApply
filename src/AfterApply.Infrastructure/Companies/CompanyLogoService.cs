@@ -65,9 +65,12 @@ internal sealed class CompanyLogoService(
 
     internal static readonly TimeSpan BackfillSpacing = TimeSpan.FromSeconds(20);
 
+    // Only the size is read here, so metadata (EXIF, ICC, XMP) is skipped rather than parsed out of
+    // bytes fetched from a third-party site.
     private static readonly DecoderOptions IdentifyOptions = new()
     {
-        Configuration = new Configuration(new PngConfigurationModule(), new JpegConfigurationModule(), new WebpConfigurationModule())
+        Configuration = new Configuration(new PngConfigurationModule(), new JpegConfigurationModule(), new WebpConfigurationModule()),
+        SkipMetadata = true
     };
 
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
