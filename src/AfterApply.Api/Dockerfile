@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Base images are pinned by digest (tag kept for readability); Dependabot's docker updates move
 # the digest forward.
-FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:35d40304542c8689331f8cab17c65926cdf48fe711e289321d71924b230a7d29 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props ./
 COPY src/AfterApply.Domain/AfterApply.Domain.csproj src/AfterApply.Domain/
