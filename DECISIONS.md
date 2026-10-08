@@ -10682,3 +10682,23 @@ PageSpeed (mobil, /en): Erişilebilirlik 89, Ajan Tabanlı Tarama 1/2. Hepsi ana
   gönderdiği polyfill modülü, ayarlanamıyor), "kullanılmayan preconnect" (gerçek tarayıcıda API
   bağlantısı hidrasyondan sonra bu soketi kullanıyor; Lighthouse izinde istek görmemiş),
   "valid-source-maps" (kaynak haritaları yalnızca Sentry'ye yükleniyor).
+
+## NuGet audit kapısı: süreli istisna + ImageSharp 3.1.12 — DECIDED (2026-10-08)
+
+**Bağlam:** 2026-10-07'de ImageSharp için beş advisory yayımlandı (3 high, 2 moderate); tek yamalı
+sürüm 4.1.2. ImageSharp 4 derlemede Six Labors lisans anahtarı istiyor (`SixLabors_ValidateLicense`,
+anahtar yoksa Release derleme hata verir); lisans metni 3.x ile birebir aynı, değişen yalnızca
+anahtar zorunluluğu. Kapı tüm açık PR'ları (Dependabot dahil) blokluyordu.
+
+- **Karar (kullanıcı):** şimdilik 3.1.12'de kalınır, `nuget-audit-allowlist.json`'a beş advisory
+  **id + paket + gerekçe + 2026-11-08 bitiş** ile yazılır. NuGet kapısı npm'inkiyle aynı sözleşmeye
+  geçti (`.github/scripts/nuget-audit-gate.mjs`); her seviye bloklar, yalnızca listedeki ve
+  süresi dolmamış advisory geçer.
+- **Erişilebilirlik:** yalnızca JPEG/PNG/WebP çözücüleri kayıtlı → TIFF açıkları (T4/T6 encoder,
+  BigTIFF) erişilemez; HistogramEqualization hiç çağrılmıyor. ICC CLUT (moderate): logo yolu
+  artık `SkipMetadata = true` ile yalnızca boyut okuyor, ICC parse edilmiyor. Avatar yolu ICC'yi
+  hâlâ parse ediyor (AutoOrient EXIF istiyor): girişli kullanıcı, 6 MB istek sınırı, rate limit.
+- **Çıkış:** Six Labors anahtarı alınınca 4.1.2'ye geçilir (CI secret + Docker build), kayıtlar silinir.
+  Tarih dolarsa kapı yeniden kırılır.
+- Aynı PR'da `extension/package-lock.json` içindeki `source-map-js` 1.2.2'ye (yalnızca vitest test
+  zinciri; pakete girmiyor, sürüm artırılmadı).
