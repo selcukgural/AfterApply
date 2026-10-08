@@ -86,6 +86,17 @@ export default async function ApplicationsHelpPage({ params }: PageProps<"/[loca
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("interview.body")}</p>
       </section>
 
+      <section id="reminder-box" className="flex scroll-mt-20 flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("reminderBox.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("reminderBox.body")}</p>
+        {(["closed", "patience", "other"] as const).map((key) => (
+          <div key={key} className="flex flex-col gap-2">
+            <h3 className="mt-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t(`reminderBox.${key}.title`)}</h3>
+            <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t(`reminderBox.${key}.body`)}</p>
+          </div>
+        ))}
+      </section>
+
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("contact.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("contact.body")}</p>

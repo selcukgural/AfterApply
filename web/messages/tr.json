@@ -1825,7 +1825,7 @@
   },
   "extensionPrivacy": {
     "title": "Tarayıcı Eklentisi Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 27 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 8 Ekim 2026",
     "scope": {
       "title": "Bu politika neyi kapsar",
       "body": "Bu sayfa yalnızca e-kariyerim Tarayıcı Eklentisi'ni (\"eklenti\") anlatır. Eklenti, e-kariyerim web uygulamasının (ekariyerim.com) bir tamamlayıcısıdır: oturum açmış bir kullanıcının o an görüntülediği bir iş ilanını — LinkedIn'de, kariyer.net'te ya da izin verdiği başka herhangi bir iş sitesinde — kendi hesabına takip edilen bir başvuru olarak kaydetmesini sağlar; ayrıca isteğe bağlı bir \"Gmail Taraması\" özelliği sunar: Gmail'de açtığınız bir maili kendi cihazınızda kontrol eder ve yalnızca iş maili gibi görünüyorsa kısa bir özet gönderir. Hesabınıza kaydedilmiş veriler (geçmiş başvurularınız) bu belgeye değil, e-kariyerim'in kendi gizlilik politikasına tabidir."
@@ -1853,6 +1853,7 @@
       "item3": "Ashby (api.ashbyhq.com)",
       "item4": "SmartRecruiters (api.smartrecruiters.com)",
       "item5": "Workday (işverenin kendi myworkdayjobs.com / myworkdaysite.com adresi)",
+      "item6": "Workable (apply.workable.com)",
       "liveness": "Aynı sunucular, süreci hâlâ açık olan başvurularınızın ve \"Sonra başvur\" listenize kaydettiğiniz ilanların hâlâ yayında olup olmadığını da kontrol eder: günde bir kez, her ilan için en fazla üç günde bir, ilanın herkese açık sayfası (LinkedIn, kariyer.net) ya da yukarıdaki sistemlerin API'si açılır. Bu istek de yalnızca ilanın herkese açık adresini taşır; hesap, çerez ya da sizi tanımlayan hiçbir şey taşımaz. Sonuç olarak yalnızca ilanın kapandığı tarih kaydedilir ve başvurunuzda gösterilir. Bir site isteği reddederse o gün ona bir daha gidilmez."
     },
     "gmail": {
@@ -2514,7 +2515,7 @@
       },
       "detail": {
         "title": "Başvuru detayı",
-        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur. Süren bir başvuruda \"Söz verilen dönüş\" hücresi de vardır: şirketin verdiği tarih, hangi aşamada verildiği ve kaç gün kaldığı ya da geçtiği."
+        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur. Süren bir başvuruda \"Söz verilen dönüş\" hücresi de vardır: şirketin verdiği tarih, hangi aşamada verildiği ve kaç gün kaldığı ya da geçtiği. Başvuruya göre bir \"Hatırlatayım\" kutusu da görünebilir; ne zaman ve neyi gösterdiği aşağıda \"Hatırlatayım kutusu ve yayından kalkan ilanlar\" bölümünde."
       },
       "contact": {
         "title": "İK iletişim bilgisi ve şirket bağlantıları",
@@ -2593,6 +2594,22 @@
       "interview": {
         "title": "Görüşme tarihi ve \"Nasıl geçti?\"",
         "body": "Başvuru Ön Değerlendirme ya da bir mülakat aşamasına geçerken görüşmenin tarihini, saatini ve nasıl yapılacağını (Online, Yerinde, Telefon) girebilirsiniz; sonradan gelen ya da değişen bir tarih için detaydaki \"Görüşme\" satırını kullanın. \"Takvimime ekle\" ile Google Takvim'e ya da .ics dosyasıyla Outlook ve Apple Takvim'e eklersiniz; takviminize biz yazmayız ve görüşme bağlantısını saklamayız. Görüşmeden bir gün önce zil hatırlatır, görüşmeden sonra panelde \"Nasıl geçti?\" sorusu çıkar: sonraki aşamaya geçtiyseniz aşamayı, dönüş bekliyorsanız söylenen süreyi seçersiniz, olumsuz döndülerse başvuru reddedildi olarak kapanır. Her cevap geri alınabilir. Görüşme tarihi hiçbir toplu orana katılmaz."
+      },
+      "reminderBox": {
+        "title": "Hatırlatayım kutusu ve yayından kalkan ilanlar",
+        "body": "Başvuru detayında, kendi verinizden derlenen bir \"Hatırlatayım\" kutusu bulunur: unutmuş olabileceğiniz ama e-kariyerim'in unutmadığı şeyler. Yalnızca o başvuru için geçerli olan satırlar görünür; hiçbiri geçerli değilse kutu hiç çıkmaz.",
+        "closed": {
+          "title": "İlan yayından kalktı",
+          "body": "Son 90 gün içinde yaptığınız ve süreci hâlâ açık başvuruların ilanlarının yayında olup olmadığını günde bir kez kontrol ederiz; her ilana en fazla üç günde bir bakılır. Bu kontrol, ilanı LinkedIn, kariyer.net, Greenhouse, Lever, Ashby, Workday, Workable ya da SmartRecruiters üzerinde olan başvurular için yapılır. İlan kapandıysa kutu kaç gün önce kapandığını yazar. Henüz dönüş almadığınız (Başvuruldu) bir başvuruda, bunun büyük ihtimalle başka bir adayla ilerlendiği anlamına geldiğini de ekler. Başvuru sonuçlandıysa bu satır gösterilmez. Kontrol isteği yalnızca ilanın herkese açık adresini taşır; hesabınız, çerezleriniz ya da sizi tanıtan hiçbir şey gitmez ve kaydedilen tek şey ilanın kapandığı tarihtir."
+        },
+        "patience": {
+          "title": "Genelde ne kadar bekliyorsunuz",
+          "body": "Başvuru hâlâ Başvuruldu durumundaysa, başvurunun üzerinden kaç gün geçtiğini kendi olağan bekleme sürenizle karşılaştırır: daha önceki başvurularınızda ilk dönüşün kaç günde geldiğinin ortancası. Bu süre, dönüş aldığınız en az 3 başvurudan sonra hesaplanır. İlan yayından kalktıysa bu satır gösterilmez; kapanma satırı daha fazlasını söyler."
+        },
+        "other": {
+          "title": "İlanın yaşı ve önceki başvurunuz",
+          "body": "İlanın yayın tarihi biliniyorsa, başvurduğunuz gün ilanın kaç günlük olduğu yazar. Aynı şirkete daha önce başvurduysanız, o başvurunun pozisyonu, ayı ve durumu bir bağlantıyla birlikte görünür."
+        }
       }
     },
     "board": {

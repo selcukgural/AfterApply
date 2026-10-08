@@ -57,6 +57,7 @@ export default async function ExtensionPrivacyPage({ params }: PageProps<"/[loca
             <li>{t("serverFetch.item3")}</li>
             <li>{t("serverFetch.item4")}</li>
             <li>{t("serverFetch.item5")}</li>
+            <li>{t("serverFetch.item6")}</li>
           </ul>
           <p className="mt-2">{t("serverFetch.liveness")}</p>
         </section>

@@ -10682,3 +10682,16 @@ PageSpeed (mobil, /en): Erişilebilirlik 89, Ajan Tabanlı Tarama 1/2. Hepsi ana
   gönderdiği polyfill modülü, ayarlanamıyor), "kullanılmayan preconnect" (gerçek tarayıcıda API
   bağlantısı hidrasyondan sonra bu soketi kullanıyor; Lighthouse izinde istek görmemiş),
   "valid-source-maps" (kaynak haritaları yalnızca Sentry'ye yükleniyor).
+
+## Yardım: "Hatırlatayım" kutusu bölümü + gizlilik listesine Workable — DECIDED (2026-10-08)
+
+- **Yardım merkezi:** `/help/applications#reminder-box` — kutunun dört satırı ve ne zaman
+  göründükleri (`reminderBox.ts` kurallarıyla birebir): kapanan ilan (son 90 gün, süreci açık
+  başvurular, günde bir, ilan başına en fazla üç günde bir, 8 kaynak), bekleme süresi (en az 3
+  dönüşten sonra; ilan kapandıysa gizli), ilan yaşı, önceki başvuru. "Başvuru detayı" bölümü
+  buraya yönlendirir. O güne kadar özelliği anlatan bir yardım metni yoktu.
+- **Gizlilik metni kayması:** Workable 2026-09-22'den beri sunucu tarafı ilan okumasında ve
+  2026-09-27'den beri ilan canlılık kontrolünde, ama `PRIVACY_POLICY.md` ve `/extension-privacy`
+  listesi beş sistem sayıyordu. Altıncı satır (`apply.workable.com`) eklendi, "Son güncelleme"
+  8 Ekim 2026. Eklenti kodu değişmedi; `store-listing/` altında yalnızca politika metni değişti,
+  bu yüzden sürüm artırılmadı ve paket üretilmedi.
