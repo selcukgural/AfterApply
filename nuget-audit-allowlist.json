@@ -1,0 +1,32 @@
+[
+  {
+    "id": "GHSA-j9gm-c75j-xc9q",
+    "package": "SixLabors.ImageSharp",
+    "reason": "TIFF CCITT T4 encoder buffer overrun. We never encode TIFF, and only the JPEG, PNG and WebP decoders are registered (AvatarImageProcessor, CompanyLogoService), so the TIFF code paths cannot be reached. The only patched release is 4.1.2, and ImageSharp 4 refuses to build without a Six Labors license key; drop this entry when we move to 4.x with a key.",
+    "expires": "2026-11-08"
+  },
+  {
+    "id": "GHSA-jjfr-hcj7-qf5w",
+    "package": "SixLabors.ImageSharp",
+    "reason": "TIFF CCITT T6 encoder buffer overrun. We never encode TIFF, and only the JPEG, PNG and WebP decoders are registered (AvatarImageProcessor, CompanyLogoService), so the TIFF code paths cannot be reached. The only patched release is 4.1.2, and ImageSharp 4 refuses to build without a Six Labors license key; drop this entry when we move to 4.x with a key.",
+    "expires": "2026-11-08"
+  },
+  {
+    "id": "GHSA-wmxv-xphr-5c9g",
+    "package": "SixLabors.ImageSharp",
+    "reason": "BigTIFF IFD decoder loop. Only the JPEG, PNG and WebP decoders are registered (AvatarImageProcessor, CompanyLogoService), so the TIFF code paths cannot be reached. The only patched release is 4.1.2, and ImageSharp 4 refuses to build without a Six Labors license key; drop this entry when we move to 4.x with a key.",
+    "expires": "2026-11-08"
+  },
+  {
+    "id": "GHSA-j3p4-wp97-rph4",
+    "package": "SixLabors.ImageSharp",
+    "reason": "HistogramEqualization index. We never call the HistogramEqualization processor (avatar: AutoOrient + Resize only). The only patched release is 4.1.2, and ImageSharp 4 refuses to build without a Six Labors license key; drop this entry when we move to 4.x with a key.",
+    "expires": "2026-11-08"
+  },
+  {
+    "id": "GHSA-gwg2-r3hj-4w44",
+    "package": "SixLabors.ImageSharp",
+    "reason": "ICC CLUT allocation. The logo path decodes with SkipMetadata, so it never parses ICC. The avatar path still does (AutoOrient needs EXIF): signed-in uploads only, 6 MB request cap, rate limited. The only patched release is 4.1.2, and ImageSharp 4 refuses to build without a Six Labors license key; drop this entry when we move to 4.x with a key.",
+    "expires": "2026-11-08"
+  }
+]

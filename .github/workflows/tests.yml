@@ -126,22 +126,21 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      # `dotnet list package --vulnerable` exits 0 whether or not it finds anything, so the report
-      # has to be inspected rather than the exit code trusted.
-      - name: Audit NuGet packages
-        run: |
-          dotnet restore AfterApply.slnx
-          dotnet list AfterApply.slnx package --vulnerable --include-transitive | tee audit.txt
-          if grep -q "has the following vulnerable packages" audit.txt; then
-            echo "::error::Vulnerable NuGet package(s) found — see the report above."
-            exit 1
-          fi
-
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: "24"
           cache: "npm"
           cache-dependency-path: web/package-lock.json
+
+      # `dotnet list package --vulnerable` exits 0 whether or not it finds anything, so the report
+      # has to be inspected rather than the exit code trusted. Every severity blocks; an advisory
+      # with no usable fix can be excused only by id in nuget-audit-allowlist.json, with a reason
+      # and an expiry date, the same contract as the npm gate below.
+      - name: Audit NuGet packages
+        run: |
+          dotnet restore AfterApply.slnx
+          dotnet list AfterApply.slnx package --vulnerable --include-transitive
+          node .github/scripts/nuget-audit-gate.mjs
 
       # Held at high/critical on purpose: npm's low/moderate advisories are dominated by transitive
       # dev-only findings that would make this gate noise rather than signal. A high/critical one
