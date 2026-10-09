@@ -37,7 +37,7 @@ jobs:
       # Integration tests included: Testcontainers uses the Docker daemon ubuntu-latest ships, as in
       # tests.yml. Four test processes per project, the runner's vCPU count, since recording runs the
       # classes of one process one at a time.
-      - uses: TestDetta/action@afc6fb36704e2754db456c4c55fe7d78cab438ca # v0.1.2
+      - uses: TestDetta/action@6ceba36f3d129a2969f2490a3c87759c33e1e8d8 # v0.1.3
         with:
           mode: record
           parallel: '4'
@@ -55,6 +55,6 @@ jobs:
           fetch-depth: 0 # TestDetta compares with the merge base
           persist-credentials: false
 
-      - uses: TestDetta/action@afc6fb36704e2754db456c4c55fe7d78cab438ca # v0.1.2
+      - uses: TestDetta/action@6ceba36f3d129a2969f2490a3c87759c33e1e8d8 # v0.1.3
         with:
           mode: test
