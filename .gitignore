@@ -54,3 +54,6 @@ TestResults/
 
 # Local CV templates for the scan calibration loop (tools/CvScanCorpus scan cv-templates). Never committed.
 /cv-templates/
+
+# TestDetta's local coverage maps and caches (td record / td affected). CI keeps its maps in the Actions cache.
+/.testdetta/

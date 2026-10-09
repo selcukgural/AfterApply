@@ -10715,3 +10715,15 @@ anahtar zorunluluğu. Kapı tüm açık PR'ları (Dependabot dahil) blokluyordu.
   listesi beş sistem sayıyordu. Altıncı satır (`apply.workable.com`) eklendi, "Son güncelleme"
   8 Ekim 2026. Eklenti kodu değişmedi; `store-listing/` altında yalnızca politika metni değişti,
   bu yüzden sürüm artırılmadı ve paket üretilmedi.
+## CI: TestDetta denemesi, mevcut kapıların yanında — DECIDED (2026-10-09)
+
+- **Ne:** `.github/workflows/testdetta.yml`. main'e her push'ta `record` modu bütün suite'i (entegrasyon
+  dahil) coverage ile koşup test projesi başına bir harita yazar (Actions cache,
+  `testdetta-coverage-<commit>`); her PR'da `test` modu yalnızca diff'in ulaşabildiği test sınıflarını
+  koşar ve hangi proje/sınıfın neden seçildiğini job özetine yazar.
+- **Neden yanında, yerinde değil:** deneme. `tests.yml` PR'da ve deploy'un önünde bütün suite'i koşmaya
+  devam eder, TestDetta işi zorunlu kontrol değil. Aynı PR'daki Tests işiyle karşılaştırmak denemenin
+  kendisi. Kapı olarak değiştirmek ayrı bir karar.
+- **Ölçüm (yerel, podman, `td record --parallel 4`):** iki test projesi, 281 sınıf, hepsi geçti, 113 s
+  (build dahil). CI'da 30 dakikalık sınır bu yüzden bol.
+- Repo public olduğu için lisans gerekmez. Action commit SHA'ya pinli (`TestDetta/action@7c3cda6`, v0.1.1).

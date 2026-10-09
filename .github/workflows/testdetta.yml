@@ -1,0 +1,60 @@
+name: TestDetta
+
+# A trial of TestDetta (test impact analysis for .NET), running next to the existing gates rather than
+# in place of them: tests.yml still runs the whole suite on every pull request and in front of every
+# deploy, and nothing here is a required check.
+#
+# - A push to main records coverage maps of the whole suite (one per test project, into the Actions
+#   cache under testdetta-coverage-<commit>).
+# - A pull request runs only the test classes its diff can reach, using the map of its merge base (or
+#   the newest one up to 50 commits before it), and writes why each project and class was picked to the
+#   job summary. Comparing that with the Tests job on the same pull request is the point of the trial.
+#
+# The repository is public, so no license is needed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: testdetta-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Integration tests included: Testcontainers uses the Docker daemon ubuntu-latest ships, as in
+      # tests.yml. Four test processes per project, the runner's vCPU count, since recording runs the
+      # classes of one process one at a time.
+      - uses: TestDetta/action@7c3cda6b850e6105b123788ed0a56781a44237ea # v0.1.1
+        with:
+          mode: record
+          parallel: '4'
+
+  affected:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read # lists the Actions caches to find the newest coverage map
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0 # TestDetta compares with the merge base
+          persist-credentials: false
+
+      - uses: TestDetta/action@7c3cda6b850e6105b123788ed0a56781a44237ea # v0.1.1
+        with:
+          mode: test
