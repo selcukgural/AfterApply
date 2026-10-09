@@ -265,7 +265,9 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("visitCounter.item1")}</li>
             <li>{t("visitCounter.item2")}</li>
             <li>{t("visitCounter.item3")}</li>
+            <li>{t("visitCounter.item4")}</li>
           </ul>
+          <p className="mt-2">{t("visitCounter.content")}</p>
           <p className="mt-2">{t("visitCounter.recipient")}</p>
           <p className="mt-2">{t("visitCounter.legalBasis")}</p>
           <p className="mt-2">{t("visitCounter.limits")}</p>

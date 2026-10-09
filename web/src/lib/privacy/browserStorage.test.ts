@@ -241,4 +241,43 @@ describe("visit counter", () => {
     const cookiePage = readFileSync(path.join(SRC, "app/[locale]/(public)/cookies/page.tsx"), "utf8");
     expect(cookiePage, "the section exists in the catalogue but nothing renders it").toContain("visitCounter.title");
   });
+
+  it("renders every sentence of its description on both policy pages", () => {
+    // A key the catalogue has but the page never renders is a promise nobody can read — the list
+    // grew from three items to four when the step events were described (2026-10-09).
+    for (const policy of ["cookies", "privacy"] as const) {
+      const page = readFileSync(path.join(SRC, `app/[locale]/(public)/${policy}/page.tsx`), "utf8");
+      for (const key of Object.keys(tr[policy].visitCounter)) {
+        expect(page, `/${policy} does not render visitCounter.${key}`).toContain(`t("visitCounter.${key}")`);
+      }
+      expect(Object.keys(en[policy].visitCounter), `the ${policy} visit counter keys differ between tr and en`)
+        .toEqual(Object.keys(tr[policy].visitCounter));
+    }
+  });
+
+  it("counts only the steps the policies describe", () => {
+    // Both policies list, in visitCounter.item1, what the counter counts besides a page opening.
+    // A new event makes that list incomplete, so adding one has to fail here first: describe the
+    // step in the tr and en privacy and cookie texts, then add it below.
+    const tracker = readFileSync(path.join(SRC, TRACKER), "utf8");
+    const union = tracker.match(/export type SiteTrafficEvent =([^;]+);/);
+    expect(union, "the SiteTrafficEvent union moved; this guard needs its new shape").not.toBeNull();
+    const events = [...union![1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]).sort();
+
+    expect(events).toEqual([
+      "cta_get_started",
+      "cta_header_get_started",
+      "cta_hero_social_sign_in",
+      "cta_tool_sign_up",
+      "cv_scan_completed",
+      "page_view",
+      "register_completed",
+      "register_password_rejected",
+      "register_social_completed",
+      "register_social_started",
+      "register_started",
+      "share_clicked",
+      "tool_result_shown",
+    ]);
+  });
 });
