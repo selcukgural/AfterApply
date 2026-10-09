@@ -183,6 +183,11 @@ export interface ApplicationDetailResponse {
   rejectionPatternOutOf?: number | null;
   /** Only when Offer: the user's other applications still in screening or an interview stage. */
   otherInterviewingCount?: number | null;
+  /** When the CV in cvDocumentFileName was uploaded; null exactly when that is. */
+  cvDocumentUploadedAt?: string | null;
+  /** The latest CV uploaded after both this application and the CV it was sent with — only while
+   *  the application is still open. */
+  newerCvUploadedAt?: string | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";

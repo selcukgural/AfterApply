@@ -844,7 +844,8 @@
       "descending": "Azalan",
       "ascending": "Artan",
       "sortLastActivity": "Son Hareket",
-      "sortApplicationCount": "Başvuru Sayısı"
+      "sortApplicationCount": "Başvuru Sayısı",
+      "quickFindHint": "Hızlı bul ({shortcut})"
     },
     "table": {
       "empty": "Kayıtlı başvuru bulunamadı.",
@@ -901,6 +902,11 @@
         "title": "Bu şirketteki geçmişin",
         "reassure": "Tekrar başvurmak sorun değil — sadece bil diye.",
         "seeAll": "Hepsini gör ({count})"
+      },
+      "savedPosting": {
+        "text": "Bu ilanı zaten kaydetmişsin: <strong>{title}</strong>",
+        "open": "Başvuruyu aç",
+        "reassure": "Yeni bir başvuruysa devam edebilirsin."
       }
     },
     "new": {
@@ -1056,7 +1062,9 @@
         "body": "Karar vermeden önce brüt teklifi nete çevirip elindeki diğer tekliflerle yan yana koymak işe yarar.",
         "compare": "Teklifleri karşılaştır",
         "others": "{count, plural, one {Görüşme sürecinde # başvurun daha var} other {Görüşme sürecinde # başvurun daha var}} — onlara teklifi haber vermek süreci hızlandırabilir."
-      }
+      },
+      "cvVersion": "{date} sürümü",
+      "newerCv": "Bu başvurudan sonra yeni bir CV yükledin ({date}); şirketteki bu sürüm."
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -2502,7 +2510,7 @@
         },
         "step3": {
           "title": "Pozisyon, ilan linki, konum ve istihdam türünü girin",
-          "body": "Başvuru tarihi varsayılan olarak bugün gelir, isterseniz değiştirebilirsiniz."
+          "body": "Başvuru tarihi varsayılan olarak bugün gelir, isterseniz değiştirebilirsiniz. İlan linkini yapıştırdığınızda o ilan listenizde zaten varsa alanın altında \"Bu ilanı zaten kaydetmişsin\" notu çıkar: kayıtlı başvurunun pozisyonu, ne zaman başvurduğunuz, durumu ve onu açan bir bağlantı. Link, adres çubuğunun eklediği takip parametreleri olsa da tanınır. Bu bir engel değildir; yeniden yayınlanan bir ilana gerçekten yeniden başvuruyorsanız kaydetmeye devam edebilirsiniz."
         },
         "step4": {
           "title": "İsterseniz kaynak, CV ve not ekleyip kaydedin",
@@ -2515,7 +2523,7 @@
       },
       "detail": {
         "title": "Başvuru detayı",
-        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur. Süren bir başvuruda \"Söz verilen dönüş\" hücresi de vardır: şirketin verdiği tarih, hangi aşamada verildiği ve kaç gün kaldığı ya da geçtiği. Başvuruya göre bir \"Hatırlatayım\" kutusu da görünebilir; ne zaman ve neyi gösterdiği aşağıda \"Hatırlatayım kutusu ve yayından kalkan ilanlar\" bölümünde."
+        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV (hangi gün yüklediğiniz sürüm olduğuyla birlikte) ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur. Süren bir başvuruda \"Söz verilen dönüş\" hücresi de vardır: şirketin verdiği tarih, hangi aşamada verildiği ve kaç gün kaldığı ya da geçtiği. Başvuruya göre bir \"Hatırlatayım\" kutusu da görünebilir; ne zaman ve neyi gösterdiği aşağıda \"Hatırlatayım kutusu ve yayından kalkan ilanlar\" bölümünde. Süren bir başvurudan sonra yeni bir CV yüklediyseniz CV satırının altında bunu hatırlatan bir not çıkar: şirketin elindeki, o başvuruda gönderdiğiniz sürümdür."
       },
       "contact": {
         "title": "İK iletişim bilgisi ve şirket bağlantıları",
@@ -2610,6 +2618,11 @@
           "title": "İlanın yaşı ve önceki başvurunuz",
           "body": "İlanın yayın tarihi biliniyorsa, başvurduğunuz gün ilanın kaç günlük olduğu yazar. Aynı şirkete daha önce başvurduysanız, o başvurunun pozisyonu, ayı ve durumu bir bağlantıyla birlikte görünür."
         }
+      },
+      "quickFind": {
+        "title": "Hızlı bul: biri aradığında",
+        "body": "Bir şirketten beklenmedik bir telefon geldiğinde hangi başvuru olduğunu hatırlamak için birkaç saniyeniz vardır. Giriş yaptığınız her sayfada Ctrl K (Mac'te ⌘K) tuşlarına basın ya da Başvurular'daki arama kutusunun sağındaki kısayol düğmesine tıklayın, şirketin ya da pozisyonun adını yazın. Eşleşen başvurunun özeti açılır: pozisyon, durum, ne zaman başvurduğunuz, gönderdiğiniz CV ve sürümü, İK kontağı, notunuz, ilandan kısa bir bölüm ve aynı şirketteki diğer başvurularınız. Birden fazla sonuç varsa ok tuşlarıyla aralarında gezinir, Enter ile başvuruyu açarsınız. \"Görüşme notu ekle\" sizi başvurunun Süreç bölümüne götürür; olay formu \"İşe alım uzmanı iletişime geçti\" seçili ve not alanı hazır olarak açılır.",
+        "phone": "Telefonda kısayol yoktur: Başvurular'daki aramaya şirketin adını yazın. Bulunan başvuruların hepsi aynı şirketteyse, o şirketteki en son başvurunuzun aynı özeti listenin üstünde açılır. Hızlı bul yalnızca kendi başvurularınızda arar."
       }
     },
     "board": {
@@ -7717,6 +7730,32 @@
           }
         }
       }
+    }
+  },
+  "quickFind": {
+    "title": "Hızlı bul",
+    "placeholder": "Şirket ya da pozisyon ara",
+    "hint": "Arayan şirketin adını yaz; başvurunun özeti burada açılır.",
+    "searching": "Aranıyor…",
+    "empty": "“{search}” ile eşleşen başvuru yok.",
+    "keys": {
+      "move": "seç",
+      "open": "aç",
+      "anywhere": "Her sayfada {shortcut}"
+    },
+    "card": {
+      "label": "{company} başvurusunun özeti",
+      "applied": "Başvurdun",
+      "cv": "Gönderdiğin CV",
+      "cvVersion": "{date} sürümü",
+      "hr": "İK kontağı",
+      "copyHrEmail": "İK e-posta adresini kopyala",
+      "note": "Notun",
+      "fromPosting": "İlandan:",
+      "readPosting": "İlanın tamamı",
+      "open": "Başvuruyu aç",
+      "addNote": "Görüşme notu ekle",
+      "others": "Bu şirkette diğer"
     }
   }
 }

@@ -62,8 +62,18 @@ internal sealed class ApplicationService(
         {
             // A pasted posting link finds the application saved from it, whatever tracking
             // parameters the copy picked up. Still inside this user's rows (the Where above).
-            var urlPattern = LikePattern.Contains(urlKey);
-            applications = applications.Where(a => a.JobUrl != null && EF.Functions.ILike(a.JobUrl, urlPattern, LikePattern.EscapeCharacter));
+            // The key has to end where the stored address's path does — at its end, or at a "/",
+            // "?" or "#" — so ".../jobs/view/40123" does not also find ".../jobs/view/4012345678"
+            // (the new-application form warns "you already saved this posting" on a match).
+            var urlKeyPattern = "%" + LikePattern.Escape(urlKey);
+            var urlKeyThenPath = urlKeyPattern + "/%";
+            var urlKeyThenQuery = urlKeyPattern + "?%";
+            var urlKeyThenFragment = urlKeyPattern + "#%";
+            applications = applications.Where(a => a.JobUrl != null
+                && (EF.Functions.ILike(a.JobUrl, urlKeyPattern, LikePattern.EscapeCharacter)
+                    || EF.Functions.ILike(a.JobUrl, urlKeyThenPath, LikePattern.EscapeCharacter)
+                    || EF.Functions.ILike(a.JobUrl, urlKeyThenQuery, LikePattern.EscapeCharacter)
+                    || EF.Functions.ILike(a.JobUrl, urlKeyThenFragment, LikePattern.EscapeCharacter)));
         }
         else if (!string.IsNullOrWhiteSpace(search))
         {
@@ -947,12 +957,26 @@ internal sealed class ApplicationService(
         // Scoped to the owner as well as to the id. The stored id is already ownership-checked on
         // the way in, but a read that only matched on id would silently start leaking file names
         // the moment anything else ever wrote this column.
-        var cvDocumentFileName = application.CvDocumentId is null
+        var cvDocument = application.CvDocumentId is null
             ? null
             : await dbContext.CvDocuments
                 .Where(d => d.Id == application.CvDocumentId && d.UserId == application.UserId)
-                .Select(d => d.FileName)
+                .Select(d => new { d.FileName, d.UploadedAt })
                 .FirstOrDefaultAsync(cancellationToken);
+
+        // "You uploaded a newer CV after this application" (canvas "İnce dokunuşlar — Paket 5",
+        // 3A): only while the process is still open — that is when the user may walk into an
+        // interview quoting a CV the company never saw. Uploads replace nothing (each is its own
+        // row), so "newer" is any of the user's CVs uploaded after both the application and the
+        // CV it went out with.
+        DateTimeOffset? newerCvUploadedAt = null;
+        if (cvDocument is not null && !TerminalApplicationStatuses.Values.Contains(application.Status))
+        {
+            var after = cvDocument.UploadedAt > application.AppliedAt ? cvDocument.UploadedAt : application.AppliedAt;
+            newerCvUploadedAt = await dbContext.CvDocuments
+                .Where(d => d.UserId == application.UserId && d.UploadedAt > after)
+                .MaxAsync(d => (DateTimeOffset?)d.UploadedAt, cancellationToken);
+        }
 
         // The status-specific extras (canvas "İnce dokunuşlar — Paket 2"): each is one small query,
         // run only on the status whose card uses it.
@@ -985,14 +1009,15 @@ internal sealed class ApplicationService(
             application.AppliedAt, application.Status, application.Source, application.Notes,
             application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
             application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource,
-            application.CvDocumentId, cvDocumentFileName,
+            application.CvDocumentId, cvDocument?.FileName,
             company.KariyerNetUrl, company.Industry, company.Country, company.Slug,
             application.PromisedReplyBy, application.PromisedReplyStatus, promiseOutcome,
             application.RejectionNotice,
             application.CurrentInterviewAt, application.CurrentInterviewAt is null ? null : application.InterviewFormat,
             job?.ClosedAt, job?.PublishedAt, medianResponseDays,
             rejectionPattern?.Category, rejectionPattern?.Count, rejectionPattern?.OutOf,
-            otherInterviewing);
+            otherInterviewing,
+            cvDocument?.UploadedAt, newerCvUploadedAt);
     }
 
     /// <summary>

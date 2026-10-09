@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { looksLikeJobLink } from "./pastedLink";
+import { looksLikeJobLink, savedPostingSearch } from "./pastedLink";
 
 describe("looksLikeJobLink", () => {
   it("accepts posting links, with or without a scheme", () => {
@@ -15,5 +15,17 @@ describe("looksLikeJobLink", () => {
     expect(looksLikeJobLink("node.js")).toBe(false);
     expect(looksLikeJobLink("javascript:alert(1)")).toBe(false);
     expect(looksLikeJobLink("")).toBe(false);
+  });
+});
+
+describe("savedPostingSearch", () => {
+  it("asks about a complete link, trimmed", () => {
+    expect(savedPostingSearch("  https://www.linkedin.com/jobs/view/4012345678/  ")).toBe("https://www.linkedin.com/jobs/view/4012345678/");
+  });
+
+  it("stays quiet while the field holds no link yet", () => {
+    expect(savedPostingSearch("")).toBeNull();
+    expect(savedPostingSearch("https://")).toBeNull();
+    expect(savedPostingSearch("linkedin")).toBeNull();
   });
 });

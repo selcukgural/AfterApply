@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
 import { externalUrlLabel, safeExternalUrl, safeMailtoUrl } from "@/lib/url/externalLink";
 import { daysAgo } from "@/lib/applications/daysAgo";
+import { cvVersionDate } from "@/lib/applications/cvVersion";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { DeleteApplicationDialog } from "@/components/applications/DeleteApplicationDialog";
 
@@ -245,13 +246,28 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             {application.cvDocumentFileName && (
               <div className="min-w-0">
                 <dt className="text-gray-500 dark:text-gray-400">{t("cvDocument")}</dt>
-                <dd className="truncate">
-                  {/* Links to the CV page rather than downloading here: the file name is enough to
-                      answer "which one did I send", and a download button on every application
-                      detail would be a second place to keep the download path correct. */}
-                  <Link href="/cv" className="text-blue-600 hover:underline dark:text-blue-400">
-                    {application.cvDocumentFileName}
-                  </Link>
+                <dd className="flex min-w-0 flex-col gap-1">
+                  <span className="truncate">
+                    {/* Links to the CV page rather than downloading here: the file name is enough to
+                        answer "which one did I send", and a download button on every application
+                        detail would be a second place to keep the download path correct. */}
+                    <Link href="/cv" className="text-blue-600 hover:underline dark:text-blue-400">
+                      {application.cvDocumentFileName}
+                    </Link>
+                    {/* Which upload it was (canvas "İnce dokunuşlar — Paket 5", 3A): two CVs often
+                        share a file name, the date is what tells them apart. */}
+                    {application.cvDocumentUploadedAt && (
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {" · "}
+                        {t("cvVersion", { date: cvVersionDate(application.cvDocumentUploadedAt, locale) })}
+                      </span>
+                    )}
+                  </span>
+                  {application.newerCvUploadedAt && (
+                    <span className="self-start rounded-md bg-warn-wash px-2 py-1 text-xs leading-5 text-warn-ink">
+                      {t("newerCv", { date: cvVersionDate(application.newerCvUploadedAt, locale) })}
+                    </span>
+                  )}
                 </dd>
               </div>
             )}
@@ -353,7 +369,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               three-field form, and only a full-width slot holds both without reflowing the card. */}
           <div className="mb-4">
             <AddEventForm
+              // Keyed on the request so arriving with "?open=note" while already on this page (the
+              // quick card's "add a call note") mounts it afresh, open.
+              key={searchParams.get("open") === "note" ? "note" : "closed"}
               isSubmitting={addEventMutation.isPending}
+              openOnArrival={searchParams.get("open") === "note"}
               onAddEvent={async (type, occurredAt, note) => {
                 await addEventMutation.mutateAsync({ type, occurredAt, note });
               }}

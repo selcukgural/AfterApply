@@ -9,3 +9,13 @@ export function looksLikeJobLink(text: string): boolean {
   if (/^https?:\/\/[^/]+\.[^/]+/i.test(value)) return true;
   return /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+\/\S+/i.test(value);
 }
+
+/**
+ * The search term that asks "is this posting already in my list?" for what the user typed into the
+ * new-application form's posting field, or null when it does not read as a link yet — half a
+ * typed address must not warn about some other posting.
+ */
+export function savedPostingSearch(jobUrl: string): string | null {
+  const value = jobUrl.trim();
+  return looksLikeJobLink(value) ? value : null;
+}

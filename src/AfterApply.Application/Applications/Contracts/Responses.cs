@@ -128,7 +128,13 @@ public sealed record ApplicationDetailResponse(
     int? RejectionPatternOutOf = null,
     // Only on an application at the offer stage: how many of the user's other applications are
     // still in an interview stage, so the offer card can say there are others to tell.
-    int? OtherInterviewingCount = null);
+    int? OtherInterviewingCount = null,
+    // When the CV in CvDocumentFileName was uploaded, so the page can say which version went out
+    // when two files share a name. Null exactly when CvDocumentFileName is.
+    DateTimeOffset? CvDocumentUploadedAt = null,
+    // The latest CV the user uploaded after both this application and the CV it was sent with —
+    // the company has the older one. Only while the application is still open; null otherwise.
+    DateTimeOffset? NewerCvUploadedAt = null);
 
 public sealed record ExtensionApplicationResponse(
     ApplicationDetailResponse Application,
