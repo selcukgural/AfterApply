@@ -10754,3 +10754,29 @@ Canvas "İnce dokunuşlar — Paket 6"; seçilen 4A (+ panel kartı), 5A, 6A.
   mülakatla birlikte silinir. Gizlilik metninin iki cümlesi güncellendi. Teşekkür taslağı adları
   yazıldığı gibi kullanır; "Hanım/Bey" yok (isimden cinsiyet tahmini gerektirir). Taslak hiçbir yere
   gönderilmez, kopyalanır.
+
+## Ücretsiz araçlarda sonuç ve kayıt tıklaması ölçümü + admin metrik düzeni — DECIDED (2026-10-09)
+
+**Bağlam:** "Kullanıcılar neden üye olmuyor" sorusu (dış bir modelin yorumu: "CV'yi taratıp gidiyorlar").
+Prod `/admin/metrics` (30 gün): `/cv-tarama` 167 görüntüleme, 94 tamamlanan tarama, tüm site 11 yeni hesap.
+Taramayı görenlerden kaçının sonuçtaki "Hesap aç"a bastığı ölçülmüyordu; kıyaslama, teklif karşılaştırma,
+yanıt oranları ve "Dönüş alamadım" bildirimi için ne sonuç ne tıklama sayılıyordu.
+
+- **İki yeni olay** (kapalı küme, string saklanır, migration yok): `tool_result_shown` (kıyaslama cevabı
+  döndü; teklif karşılaştırmada örnek dışı ilk rakam — ziyaret başına bir kez; bildirim gönderildi) ve
+  `cta_tool_sign_up` (araç içindeki kayıt linki — CV/kıyaslama sonucu, yanıt oranları, bildirimin teşekkür
+  linki). Hangi araç olduğunu **yol** söyler; araç başına ayrı olay açılmadı. CV taraması kendi
+  `cv_scan_completed` olayını korur (seri kopmasın).
+- **Ortak bileşen:** `components/analytics/ToolSignUpLink.tsx` (server sayfada da kullanılabilen client ada).
+- **Admin düzeni (canvas varyant A):** ürün sayıları tek kartta 8 hücre (kutu yerine çizgi, 7 günlük fark);
+  kayıt hunisi satır tablosu (sayı, tüm görüntülemelere çubuk, önceki adıma oran); "Ücretsiz araçlar"
+  tablosu (görüntüleme → sonuç gördü → hesap aç tıklaması → paylaşım); kalibrasyon en altta, kapalı.
+  B (özet şerit + sekmeler) seçilmedi.
+- **Sıra (kullanıcı kararı):** önce ölçüm deploy, ~2 hafta taban; sonra üyelik çağrısı varyant A (çağrı
+  sonucun hemen altında, "yine hesapsız" vurgusu kalkar), ardından B (aynı sayfada 2. taramada önceki
+  puanla fark + "İlerlememi kaydet"; önceki sonuç yalnız sayfa hafızasında). C (kısmi kilit) yapılmayacak:
+  sosyal girişte sonuç taşınmak zorunda kalır, "dosyan bizde kalmıyor" vaadiyle çelişir. 2. taramayı
+  hesaba bağlamak da reddedildi: ziyaretçiyi saymak IP ya da tarayıcı deposu ister.
+- **Gizlilik:** satırlar yine yalnız (olay, yol, dil, referrer host, sayı). Teklif rakamı, kıyaslama cevabı,
+  bildirim içeriği gönderilmez. Açık nokta: gizlilik/çerez metni sayacı yalnız sayfa görüntüleme olarak
+  anlatıyor; adım olaylarından (bu değişiklikten önce de vardı) söz etmiyor — metin güncellemesi ayrı karar.

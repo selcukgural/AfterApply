@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ShareRow } from "@/components/share/ShareRow";
+import { ToolSignUpLink } from "@/components/analytics/ToolSignUpLink";
+import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { SITE_URL } from "@/lib/seo/routes";
 import { cvScanPath } from "@/lib/cvScan/path";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -53,7 +55,10 @@ export function BenchmarkForm() {
 
   const submit = useMutation({
     mutationFn: benchmarkApi.submit,
-    onSuccess: setResult,
+    onSuccess: (response) => {
+      setResult(response);
+      trackSiteTraffic("tool_result_shown");
+    },
   });
 
   const handleSubmit = (event: FormEvent) => {
@@ -319,9 +324,9 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
           </Link>
         </p>
 
-        <Link href="/register" className={buttonClassName("primary", "self-start px-5 py-2.5")}>
+        <ToolSignUpLink className={buttonClassName("primary", "self-start px-5 py-2.5")}>
           {t("cta.button")}
-        </Link>
+        </ToolSignUpLink>
       </div>
     </div>
   );

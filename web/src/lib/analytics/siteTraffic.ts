@@ -32,7 +32,9 @@ export type SiteTrafficEvent =
   | "register_password_rejected"
   | "register_social_started"
   | "register_social_completed"
-  | "cta_hero_social_sign_in";
+  | "cta_hero_social_sign_in"
+  | "tool_result_shown"
+  | "cta_tool_sign_up";
 
 export interface SiteTrafficPayload {
   event: SiteTrafficEvent;

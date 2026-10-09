@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { buttonClassName } from "@/components/ui/Button";
+import { ToolSignUpLink } from "@/components/analytics/ToolSignUpLink";
 import { SectorResponseRatesTable } from "@/components/responseRates/SectorResponseRatesTable";
 
 // The thresholds the copy quotes. The table itself prints the server's live values beside the
@@ -82,9 +83,9 @@ export default async function ResponseRatesPage({ params }: PageProps<"/[locale]
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("cta.title")}</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">{t("cta.body")}</p>
         </div>
-        <Link href="/register" className={buttonClassName("primary", "inline-flex w-fit shrink-0")}>
+        <ToolSignUpLink className={buttonClassName("primary", "inline-flex w-fit shrink-0")}>
           {t("cta.button")}
-        </Link>
+        </ToolSignUpLink>
       </section>
     </div>
   );

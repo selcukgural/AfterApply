@@ -178,6 +178,15 @@ describe("visit counter", () => {
     "app/[locale]/(public)/auth/google/callback/page.tsx",
     "app/[locale]/(public)/auth/linkedin/callback/page.tsx",
     "components/analytics/SiteTrafficReporter.tsx",
+    // The free tools' sign-up link (2026-10-09): one `cta_tool_sign_up` per click, filed under the
+    // tool's page. Mounted on the CV and benchmark results, /response-rates and the company page's
+    // "no reply" report — all public.
+    "components/analytics/ToolSignUpLink.tsx",
+    // The benchmark, the offer comparison and the "no reply" report each say once that the visitor
+    // got a result (`tool_result_shown`). The answer, the offer figures and the report's content are
+    // not part of it — a name and a path, like every other event.
+    "components/benchmark/BenchmarkForm.tsx",
+    "components/companies/SilenceReportCard.tsx",
     // The CV scan reports one event of its own — that a scan finished. It carries no more than any
     // other event does (a name and a path), and the file it just read is not part of it.
     "components/cvScan/CvScanForm.tsx",
@@ -191,6 +200,7 @@ describe("visit counter", () => {
     "components/landing/WeeklyJobsHeroCtas.tsx",
     // The header's sign-up button, rendered only for a signed-out visitor (2026-10-02).
     "components/layout/SiteHeader.tsx",
+    "components/offerCompare/OfferComparison.tsx",
     // The share row reports one `share_clicked` per use — again a name and a path, never what was
     // shared or with whom. It renders on the CV result, the benchmark result and the company page,
     // all public; a signed-in page that ever mounted it would be caught by the (protected) rule

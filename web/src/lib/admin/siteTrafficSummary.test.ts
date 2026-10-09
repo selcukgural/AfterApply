@@ -62,4 +62,49 @@ describe("summariseTraffic", () => {
     expect(summary.cvScans).toBe(31);
     expect(summary.heroSocialClicks).toBe(6);
   });
+
+  it("adds the tools' sign-up clicks to every other sign-up button", () => {
+    const summary = summariseTraffic([
+      row("CtaGetStarted", "/", 8),
+      row("CtaHeaderGetStarted", "/", 1),
+      row("CtaHeroSocialSignIn", "/", 3),
+      row("CtaToolSignUp", "/cv-tarama", 4),
+      row("CtaToolSignUp", "/benchmark", 2),
+    ])!;
+
+    expect(summary.toolSignUpClicks).toBe(6);
+    expect(summary.signUpClicks).toBe(18);
+  });
+
+  it("reads each free tool from its own pages, in both languages", () => {
+    const summary = summariseTraffic([
+      row("PageView", "/cv-tarama", 150),
+      row("PageView", "/cv-scan", 17),
+      row("CvScanCompleted", "/cv-tarama", 90),
+      row("CvScanCompleted", "/cv-scan", 4),
+      row("CtaToolSignUp", "/cv-tarama", 5),
+      row("ShareClicked", "/cv-tarama", 2),
+      row("PageView", "/benchmark", 111),
+      row("ToolResultShown", "/benchmark", 40),
+      row("PageView", "/offer-comparison", 9),
+      row("ToolResultShown", "/teklif-karsilastirma", 6),
+      row("PageView", "/response-rates", 30),
+      row("CtaToolSignUp", "/response-rates", 1),
+      row("PageView", "/companies/acme", 50),
+      row("PageView", "/companies/globex", 8),
+      row("PageView", "/companies", 400),
+      row("ToolResultShown", "/companies/acme", 3),
+      row("ShareClicked", "/companies/acme", 7),
+    ])!;
+    const tool = (key: string) => summary.tools.find((t) => t.key === key)!;
+
+    expect(tool("cvScan")).toEqual({ key: "cvScan", views: 167, results: 94, signUpClicks: 5, shares: 2 });
+    expect(tool("benchmark")).toMatchObject({ views: 111, results: 40, signUpClicks: 0 });
+    expect(tool("offerCompare")).toMatchObject({ views: 9, results: 6, shares: null });
+    // A page with nothing to run has no result count, rather than a misleading zero.
+    expect(tool("responseRates")).toMatchObject({ views: 30, results: null, signUpClicks: 1 });
+    // The report lives on the company pages, not on the directory itself; a company page's share
+    // button is not the report's.
+    expect(tool("silenceReport")).toMatchObject({ views: 58, results: 3, shares: null });
+  });
 });

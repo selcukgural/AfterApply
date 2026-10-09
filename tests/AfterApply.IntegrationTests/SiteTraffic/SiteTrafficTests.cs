@@ -213,6 +213,18 @@ public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiH
     }
 
     [Fact]
+    public async Task A_Tools_Result_And_Its_Sign_Up_Click_Are_Stored_Under_The_Tools_Page()
+    {
+        await ReportAsync("tool_result_shown", "/tr/benchmark");
+        await ReportAsync("cta_tool_sign_up", "/tr/benchmark");
+        await ReportAsync("cta_tool_sign_up", "/tr/cv-tarama?utm_source=share");
+
+        var rows = await RowsAsync();
+        rows.Select(r => (r.Event, r.Path)).OrderBy(r => r.Path, StringComparer.Ordinal).ThenBy(r => r.Event, StringComparer.Ordinal)
+            .ShouldBe([("CtaToolSignUp", "/benchmark"), ("ToolResultShown", "/benchmark"), ("CtaToolSignUp", "/cv-tarama")]);
+    }
+
+    [Fact]
     public async Task Reading_The_Counts_Back_Needs_An_Admin()
     {
         (await _client.GetAsync("/api/admin/site-traffic")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);

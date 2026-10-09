@@ -205,7 +205,7 @@ public class SiteTrafficNormalizerTests
             [
                 "page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed", "share_clicked",
                 "cta_header_get_started", "register_password_rejected", "register_social_started", "register_social_completed",
-                "cta_hero_social_sign_in"
+                "cta_hero_social_sign_in", "tool_result_shown", "cta_tool_sign_up"
             ];
 
         var reachable = wireNames
@@ -213,6 +213,21 @@ public class SiteTrafficNormalizerTests
             .ToHashSet();
 
         reachable.ShouldBe(Enum.GetValues<SiteTrafficEvent>().ToHashSet(), ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData("/tr/benchmark", "/benchmark")]
+    [InlineData("/en/offer-comparison", "/offer-comparison")]
+    [InlineData("/tr/teklif-karsilastirma", "/teklif-karsilastirma")]
+    [InlineData("/tr/response-rates", "/response-rates")]
+    [InlineData("/tr/companies/acme", "/companies/acme")]
+    [InlineData("/tr/cv-tarama", "/cv-tarama")]
+    public void The_Tool_Events_Keep_The_Tool_Page_As_Their_Path(string path, string expected)
+    {
+        // One event for every tool: the path is what tells the benchmark's result from the offer
+        // comparison's on /admin/metrics, so it must survive normalisation as the tool's own page.
+        SiteTrafficNormalizer.Normalize("tool_result_shown", path, null)!.Path.ShouldBe(expected);
+        SiteTrafficNormalizer.Normalize("cta_tool_sign_up", path, null)!.Path.ShouldBe(expected);
     }
 
     [Theory]
