@@ -1543,7 +1543,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 28 September 2026",
+    "lastUpdated": "Last updated: 9 October 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1563,10 +1563,12 @@
     },
     "visitCounter": {
       "title": "Visit counter",
-      "intro": "We count how often public pages are opened, on our own server. A visit records only:",
-      "item1": "The address of the public page opened (everything after the question mark excluded) and the page's language.",
-      "item2": "Which site you found us from — the domain only.",
-      "item3": "A daily counter — how many times that combination was seen that day.",
+      "intro": "We count how often public pages are opened, and how often a few steps are taken on the site, on our own server. Each time, only this is recorded:",
+      "item1": "What happened: a page was opened, or one of these steps — a sign-up button was clicked; a sign-up was started, completed, or its password was not accepted; a free tool showed its result (a CV score, a benchmark answer sent, the first figure in the offer comparison, a \"no reply\" report sent from a company page); a share button was clicked.",
+      "item2": "The address of the public page it happened on (everything after the question mark excluded) and the page's language.",
+      "item3": "Which site you found us from — the domain only.",
+      "item4": "A daily counter — how many times that combination of four was seen that day.",
+      "content": "When a step is counted, its content is not sent: your CV file and score, the offer figures you type, your benchmark answers, what your report says, your email address or your password never reach this counter. All the counter knows is that the step was taken and on which page.",
       "recipient": "Recipient: none. The data stays on our own server; it is sent to no analytics service and to no other third party.",
       "legalBasis": "No stored row can be linked to a person — no visitor id, no session id, no IP address, no browser details — so there is no personal data here. Should it be assessed otherwise, the basis is legitimate interest (KVKK art. 5/2-f, GDPR art. 6/1-f): measuring whether the service is used at all.",
       "limits": "No cookie is used, nothing is written to your browser, and there is no profiling or ad targeting. If your browser has “Do Not Track” switched on, nothing is counted. See “Visit counter” in the Cookie Policy for the details.",
@@ -1581,7 +1583,7 @@
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link. When you record an interview you may also note who you are meeting; those names likewise stay in your account only, are used for the thank-you draft, and are deleted with the interview or your account.",
-      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, a candidate experience, a blog comment, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark, the \"no reply\" report on company pages) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, a candidate experience, a blog comment, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark, the \"no reply\" report on company pages) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views and the step reports sent to the visit counter (see \"Visit counter\").",
       "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on LinkedIn and kariyer.net — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record. If you also give consent, the fit score computed for each posting, its short reasoning and the matched/missing criteria are kept on your account too — see \"Weekly job matching\"."
     },
     "googleSignIn": {
@@ -1956,7 +1958,7 @@
   },
   "cookies": {
     "title": "Cookie Policy",
-    "lastUpdated": "Last updated: 27 September 2026",
+    "lastUpdated": "Last updated: 9 October 2026",
     "intro": {
       "title": "In short",
       "body": "e-kariyerim uses only the three cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
@@ -1989,14 +1991,16 @@
     },
     "visitCounter": {
       "title": "Visit counter",
-      "intro": "We count how often the site's public pages are opened, on our own server. No cookie is used, nothing is written to your browser, and nothing is sent to any third party. A visit adds only these three things to a counter:",
-      "item1": "The address of the page opened — public pages only. Everything after the question mark (a search term, the key in a password-reset link) is cut off before it leaves your browser.",
-      "item2": "The page's language — Turkish or English.",
-      "item3": "Which site you found us from — the domain only (“google.com”, say), never the address on that site or the words you searched for.",
+      "intro": "We count how often the site's public pages are opened, and how often a few steps are taken on the site, on our own server. No cookie is used, nothing is written to your browser, and nothing is sent to any third party. Each time, only these four things are added to a counter:",
+      "item1": "What happened — a page was opened, or one of these steps: a sign-up button was clicked; a sign-up was started, completed, or its password was not accepted; a free tool showed its result (CV scan, benchmark, offer comparison, the \"no reply\" report); a share button was clicked.",
+      "item2": "The address of the page it happened on — public pages only. Everything after the question mark (a search term, the key in a password-reset link) is cut off before it leaves your browser.",
+      "item3": "The page's language — Turkish or English.",
+      "item4": "Which site you found us from — the domain only (“google.com”, say), never the address on that site or the words you searched for.",
+      "content": "When a step is counted, its content is not sent: your CV score, the figures you type, the answers you give or your email address never reach this counter — only \"this step was taken on this page\".",
       "note": "None of this identifies you: no visitor id, no session id, no IP address and no browser details are stored. Two visits by the same person and one visit each by two people are therefore the same number to us, and a row can be linked neither to an account nor to another row. Even when you are signed in, this request carries none of your account's credentials.",
       "noCookie": "Because no cookie is written, the consent screen promised in “If this policy changes” below is not triggered here — that promise covers optional cookies. We are describing the counter anyway, so you can read what it holds.",
       "dnt": "If your browser has “Do Not Track” switched on, nothing is counted at all.",
-      "why": "Why we count: there is no other way for us to see whether anyone arrives, which article is useful, or whether people who try to sign up get stuck. Counter rows are aggregate and hold no personal data, so they are kept indefinitely."
+      "why": "Why we count: there is no other way for us to see whether anyone arrives, which article is useful, whether people who use a free tool go on to open an account, or whether people who try to sign up get stuck. Counter rows are aggregate and hold no personal data, so they are kept indefinitely."
     },
     "noThirdParty": {
       "title": "Third parties and tracking",

@@ -10780,3 +10780,8 @@ yanıt oranları ve "Dönüş alamadım" bildirimi için ne sonuç ne tıklama s
 - **Gizlilik:** satırlar yine yalnız (olay, yol, dil, referrer host, sayı). Teklif rakamı, kıyaslama cevabı,
   bildirim içeriği gönderilmez. Açık nokta: gizlilik/çerez metni sayacı yalnız sayfa görüntüleme olarak
   anlatıyor; adım olaylarından (bu değişiklikten önce de vardı) söz etmiyor — metin güncellemesi ayrı karar.
+- **Gizlilik metni güncellendi (aynı gün, ayrı PR):** Gizlilik ve Çerez Politikası'ndaki "Ziyaret sayacı"
+  artık dört şey sayıyor: ne olduğu (sayfa açılışı ya da adım: kayıt butonu, kaydın başlaması/tamamlanması/
+  parolanın reddi, araç sonucu, paylaş), sayfa, dil, referrer alan adı; adımın içeriğinin (puan, rakam, cevap,
+  e-posta) gönderilmediği ayrı paragrafta. "İşlem kayıtları" istisnası adım bildirimlerini de kapsıyor.
+  `browserStorage.test.ts` olay listesini donduruyor: yeni bir olay iki metin güncellenmeden eklenemez.

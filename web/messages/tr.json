@@ -1543,7 +1543,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 28 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 9 Ekim 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1563,10 +1563,12 @@
     },
     "visitCounter": {
       "title": "Ziyaret sayacı",
-      "intro": "Herkese açık sayfaların kaç kez açıldığını kendi sunucumuzda sayıyoruz. Bir ziyarette yalnızca şunlar kaydedilir:",
-      "item1": "Açılan herkese açık sayfanın adresi (soru işaretinden sonrası hariç) ve sayfanın dili.",
-      "item2": "Bizi hangi siteden bulduğunuz — yalnızca alan adı.",
-      "item3": "Günlük bir sayaç — bu üçlünün o gün kaç kez görüldüğü.",
+      "intro": "Herkese açık sayfaların kaç kez açıldığını ve sitede birkaç adımın kaç kez atıldığını kendi sunucumuzda sayıyoruz. Her seferinde yalnızca şunlar kaydedilir:",
+      "item1": "Ne olduğu: bir sayfanın açılması ya da şu adımlardan biri — bir kayıt butonuna tıklanması; kaydın başlaması, tamamlanması veya parolanın kabul edilmemesi; ücretsiz bir aracın sonuç göstermesi (CV puanı, kıyaslama cevabının gönderilmesi, teklif karşılaştırmada ilk rakam, şirket sayfasında \"dönüş alamadım\" bildiriminin gönderilmesi); bir paylaş butonuna tıklanması.",
+      "item2": "Bunun olduğu herkese açık sayfanın adresi (soru işaretinden sonrası hariç) ve sayfanın dili.",
+      "item3": "Bizi hangi siteden bulduğunuz — yalnızca alan adı.",
+      "item4": "Günlük bir sayaç — bu dörtlünün o gün kaç kez görüldüğü.",
+      "content": "Bir adım sayılırken içeriği gönderilmez: CV dosyanız ve puanınız, yazdığınız teklif rakamları, kıyaslama cevaplarınız, bildiriminizin içeriği, e-posta adresiniz ya da parolanız bu sayaca hiç ulaşmaz. Sayaç yalnızca adımın atıldığını ve hangi sayfada atıldığını bilir.",
       "recipient": "Alıcı: yok. Veri kendi sunucumuzda kalır; hiçbir analitik hizmetine ya da başka bir üçüncü tarafa gönderilmez.",
       "legalBasis": "Kaydedilen hiçbir satır bir kişiyle ilişkilendirilemez — ziyaretçi numarası, oturum numarası, IP adresi ve tarayıcı bilgisi saklanmaz — dolayısıyla ortada kişisel veri yoktur. Aksi değerlendirilirse dayanak meşru menfaattir (KVKK m. 5/2-f, GDPR m. 6/1-f): hizmetin kullanılıp kullanılmadığını ölçmek.",
       "limits": "Çerez kullanılmaz, tarayıcınıza hiçbir şey yazılmaz, profilleme ve reklam hedeflemesi yapılmaz. Tarayıcınızda “Do Not Track” açıksa hiçbir sayım yapılmaz. Ayrıntılar için Çerez Politikası'ndaki “Ziyaret sayacı” bölümüne bakabilirsiniz.",
@@ -1581,7 +1583,7 @@
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
       "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür. Bir görüşmeyi kaydederken isteğe bağlı olarak kiminle görüşeceğinizi de yazabilirsiniz; bu adlar da aynı şekilde yalnızca sizin hesabınızda durur, teşekkür notu taslağında kullanılır ve görüşme silindiğinde ya da hesabınızı sildiğinizde birlikte silinir.",
-      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, aday deneyimi, blog yorumu, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark, şirket sayfasındaki \"dönüş alamadım\" bildirimi) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
+      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, aday deneyimi, blog yorumu, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark, şirket sayfasındaki \"dönüş alamadım\" bildirimi) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri ve ziyaret sayacına giden adım bildirimleri (bkz. \"Ziyaret sayacı\").",
       "item7": "Haftalık ilan eşleştirmeyi (ücretli özellik) kullanırsanız: arama kriteri olarak kaydettiğiniz pozisyon adları (en fazla üç) ve konum. Bunlar hesabınızda saklanır ve haftada bir, LinkedIn ve kariyer.net'te arama olarak kullanılır — aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın. Bulunan ilanlar sizin için sınırlı bir süre tutulur; hangilerine zaten başvurduğunuz kendi başvurularınızdan hesaplanır ve ayrı bir kayıt olarak asla saklanmaz. Ayrıca rıza verirseniz her ilan için hesaplanan uyum puanı, kısa gerekçesi ve uyan/eksik kriter listesi de hesabınızda tutulur — bkz. \"Haftalık ilan eşleştirme\"."
     },
     "googleSignIn": {
@@ -1956,7 +1958,7 @@
   },
   "cookies": {
     "title": "Çerez Politikası",
-    "lastUpdated": "Son güncelleme: 27 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 9 Ekim 2026",
     "intro": {
       "title": "Kısaca",
       "body": "e-kariyerim yalnızca hizmetin çalışması için gereken üç çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
@@ -1989,14 +1991,16 @@
     },
     "visitCounter": {
       "title": "Ziyaret sayacı",
-      "intro": "Sitenin herkese açık sayfalarına kaç kez girildiğini kendi sunucumuzda sayıyoruz. Bunun için çerez kullanılmıyor, tarayıcınıza hiçbir şey yazılmıyor ve hiçbir üçüncü tarafa hiçbir şey gönderilmiyor. Bir ziyarette yalnızca şu üç şey bir sayaca eklenir:",
-      "item1": "Açılan sayfanın adresi — yalnızca herkese açık sayfalar. Adresin soru işaretinden sonraki kısmı (arama terimi, parola sıfırlama bağlantısındaki anahtar gibi) daha tarayıcınızdan çıkmadan kesilir.",
-      "item2": "Sayfanın dili — Türkçe ya da İngilizce.",
-      "item3": "Bizi hangi siteden bulduğunuz — yalnızca alan adı (örneğin “google.com”), o sitedeki adres veya arattığınız kelime değil.",
+      "intro": "Sitenin herkese açık sayfalarına kaç kez girildiğini ve sitede birkaç adımın kaç kez atıldığını kendi sunucumuzda sayıyoruz. Bunun için çerez kullanılmıyor, tarayıcınıza hiçbir şey yazılmıyor ve hiçbir üçüncü tarafa hiçbir şey gönderilmiyor. Her seferinde yalnızca şu dört şey bir sayaca eklenir:",
+      "item1": "Ne olduğu — bir sayfanın açılması ya da şu adımlardan biri: bir kayıt butonuna tıklanması; kaydın başlaması, tamamlanması veya parolanın kabul edilmemesi; ücretsiz bir aracın sonuç göstermesi (CV taraması, kıyaslama, teklif karşılaştırma, \"dönüş alamadım\" bildirimi); bir paylaş butonuna tıklanması.",
+      "item2": "Bunun olduğu sayfanın adresi — yalnızca herkese açık sayfalar. Adresin soru işaretinden sonraki kısmı (arama terimi, parola sıfırlama bağlantısındaki anahtar gibi) daha tarayıcınızdan çıkmadan kesilir.",
+      "item3": "Sayfanın dili — Türkçe ya da İngilizce.",
+      "item4": "Bizi hangi siteden bulduğunuz — yalnızca alan adı (örneğin “google.com”), o sitedeki adres veya arattığınız kelime değil.",
+      "content": "Bir adım sayılırken içeriği gönderilmez: CV'nizin puanı, yazdığınız rakamlar, verdiğiniz cevaplar ya da e-posta adresiniz bu sayaca ulaşmaz — yalnızca \"bu sayfada bu adım atıldı\" bilgisi.",
       "note": "Bu satırların hiçbirinde sizi tanımlayan bir şey yoktur: ziyaretçi numarası, oturum numarası, IP adresi ve tarayıcı bilgisi saklanmaz. Bu yüzden aynı kişinin iki ziyareti ile iki ayrı kişinin birer ziyareti bizim için aynı sayıdır; bir satır ne bir hesaba ne de başka bir satıra bağlanabilir. Giriş yapmış olsanız bile bu istek hesabınızın kimlik bilgisini taşımaz.",
       "noCookie": "Çerez yazılmadığı için aşağıdaki “Bu politika değişirse” bölümünde söz verilen onay ekranı burada devreye girmez — o söz isteğe bağlı çerezler içindir. Yine de bu bölümü, ne saydığımızı okuyabilesiniz diye yazıyoruz.",
       "dnt": "Tarayıcınızda “Do Not Track” (izlenmek istemiyorum) ayarı açıksa hiçbir sayım yapılmaz.",
-      "why": "Neden sayıyoruz: siteye kimsenin gelip gelmediğini, hangi yazının işe yaradığını ve kayıt olmayı deneyenlerin takılıp takılmadığını başka türlü göremiyoruz. Sayaç satırları toplu olduğu ve kişisel veri içermediği için süresiz saklanır."
+      "why": "Neden sayıyoruz: siteye kimsenin gelip gelmediğini, hangi yazının işe yaradığını, ücretsiz araçları kullananların hesap açmaya devam edip etmediğini ve kayıt olmayı deneyenlerin takılıp takılmadığını başka türlü göremiyoruz. Sayaç satırları toplu olduğu ve kişisel veri içermediği için süresiz saklanır."
     },
     "noThirdParty": {
       "title": "Üçüncü taraf ve izleme",

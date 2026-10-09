@@ -103,7 +103,9 @@ export default async function CookiesPage({ params }: PageProps<"/[locale]/cooki
             <li>{t("visitCounter.item1")}</li>
             <li>{t("visitCounter.item2")}</li>
             <li>{t("visitCounter.item3")}</li>
+            <li>{t("visitCounter.item4")}</li>
           </ul>
+          <p className="mt-2">{t("visitCounter.content")}</p>
           <p className="mt-2">{t("visitCounter.note")}</p>
           <p className="mt-2">{t("visitCounter.noCookie")}</p>
           <p className="mt-2">{t("visitCounter.dnt")}</p>
