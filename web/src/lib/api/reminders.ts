@@ -5,6 +5,7 @@ import type {
   InterviewOutcomeRequest,
   InterviewOutcomeResponse,
   PagedResult,
+  ReapplyReminderResponse,
   ReminderPauseResponse,
   ReminderResponse,
   UndoBulkStatusEntry,
@@ -25,6 +26,9 @@ export const REMINDER_PAGE_SIZE = 5;
 export const remindersApi = {
   list: (page: number, pageSize = REMINDER_PAGE_SIZE) =>
     apiFetch<PagedResult<ReminderResponse>>(`/api/reminders?page=${page}&pageSize=${pageSize}`),
+
+  /** "Apply here again" reminders whose day has come — kept apart from the follow-up list. */
+  reapply: () => apiFetch<ReapplyReminderResponse[]>("/api/reminders/reapply"),
 
   dismiss: (id: string) => apiFetch<void>(`/api/reminders/${id}/dismiss`, { method: "POST" }),
 

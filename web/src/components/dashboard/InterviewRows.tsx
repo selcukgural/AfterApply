@@ -106,6 +106,7 @@ export function InterviewHeldMeta({ reminder }: { reminder: ReminderResponse }) 
         when,
         time,
       })}
+      {reminder.interviewWith ? <> · {reminder.interviewWith}</> : null}
     </>
   );
 }

@@ -2,19 +2,23 @@ import type { SelectionState } from "@/lib/applications/bulkSelection";
 import type { ReminderSelection, ReminderType } from "@/types/api";
 
 /** Message key under `dashboard.reminders` for each reminder type. */
-export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted" | "promiseMissed" | "interviewHeld"> = {
+export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted" | "promiseMissed" | "interviewHeld" | "reapply"> = {
   FollowUp: "followUp",
   PossiblyGhosted: "possiblyGhosted",
   PromiseMissed: "promiseMissed",
   InterviewHeld: "interviewHeld",
+  // Never on the follow-up list (it has its own card, ReapplyRemindersCard); here for completeness.
+  Reapply: "reapply",
 };
 
 /** The one type whose row asks its own question ("how did it go?") instead of offering a single
  *  answer button: its answers are the stages, the reply date, the rejection. */
-export type SingleAnswerReminderType = Exclude<ReminderType, "InterviewHeld">;
+export type SingleAnswerReminderType = Exclude<ReminderType, "InterviewHeld" | "Reapply">;
 
+/** "Apply again" is never on the follow-up list (ReapplyRemindersCard); excluded so no answer
+ *  meant for an open application can be offered for it. */
 export function hasSingleAnswer(type: ReminderType): type is SingleAnswerReminderType {
-  return type !== "InterviewHeld";
+  return type !== "InterviewHeld" && type !== "Reapply";
 }
 
 /**

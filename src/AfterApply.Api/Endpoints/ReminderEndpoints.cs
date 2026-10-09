@@ -102,6 +102,13 @@ public static class ReminderEndpoints
             .WithDescription("Interviews of the applications' current stages in the next 14 days, soonest first, at most ten.")
             .Produces<IReadOnlyList<UpcomingInterviewResponse>>();
 
+        group.MapGet("/reapply", async (ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetDueReapplyRemindersAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("The current user's due reminders to apply again")
+            .WithDescription("Reminders set on rejected applications whose day has come, oldest first. Kept apart from the " +
+                             "follow-up list: they are about closed applications, and no bulk answer acts on them.")
+            .Produces<IReadOnlyList<ReapplyReminderResponse>>();
+
         // Bulk answers. Under /bulk for the reason the applications routes are: "bulk" is not a
         // Guid, so the single-reminder routes above can never catch these. Every one takes the
         // same selection — the ticked ids, or "all" with the count the user was shown — and every

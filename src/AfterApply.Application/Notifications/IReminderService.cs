@@ -64,6 +64,17 @@ public interface IReminderService
     /// couple of hours), soonest first, at most ten.</summary>
     Task<IReadOnlyList<UpcomingInterviewResponse>> GetUpcomingInterviewsAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>Sets (or moves) the "apply here again" reminder of one of the user's rejected
+    /// applications to <paramref name="months"/> from now; returns the morning it will show.</summary>
+    Task<ReapplyReminderResult> SetReapplyReminderAsync(Guid userId, Guid applicationId, int months, CancellationToken cancellationToken);
+
+    /// <summary>"No need" before one is set, or "cancel" after: the question is answered for this
+    /// rejection and the page stops asking.</summary>
+    Task<ReapplyReminderResult> DeclineReapplyReminderAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);
+
+    /// <summary>The user's "apply here again" reminders whose day has come.</summary>
+    Task<IReadOnlyList<ReapplyReminderResponse>> GetDueReapplyRemindersAsync(Guid userId, CancellationToken cancellationToken);
+
     /// <summary>
     /// Scans applications across all users and persists new Reminder rows for
     /// applications that have crossed a follow-up or ghosting threshold, and retires
@@ -93,3 +104,13 @@ public interface IReminderService
     /// card — and clears the break. Follow-up reminders are not touched.</summary>
     Task<BulkChangeStatusResponse> CloseSilencedAsync(Guid userId, CancellationToken cancellationToken);
 }
+
+public enum ReapplyReminderOutcome
+{
+    Saved,
+    NotFound,
+    /// <summary>The application is not (or no longer) rejected: there is nothing to re-apply after.</summary>
+    NotRejected
+}
+
+public sealed record ReapplyReminderResult(ReapplyReminderOutcome Outcome, DateTimeOffset? RemindAt = null);

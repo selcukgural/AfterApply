@@ -11,5 +11,6 @@ public sealed class SetInterviewRequestValidator : AbstractValidator<SetIntervie
     {
         RuleFor(x => x.InterviewAt).MustBeAReasonableInterviewDate(localizer);
         RuleFor(x => x.Format).IsInEnum();
+        RuleFor(x => x.With).MaximumLength(Domain.Applications.Application.InterviewWithMaxLength);
     }
 }

@@ -15,6 +15,7 @@ import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState"
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
+import { ReapplyRemindersCard } from "@/components/dashboard/ReapplyRemindersCard";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
 import { InterviewMorningCard } from "@/components/dashboard/InterviewMorningCard";
 import { EndedProcessesCard } from "@/components/dashboard/EndedProcessesCard";
@@ -103,6 +104,7 @@ export default function DashboardPage() {
           <ReminderBreakGate>
             <StaleApplicationsBanner />
             <RemindersPanel />
+            <ReapplyRemindersCard />
             <EndedProcessesCard />
           </ReminderBreakGate>
           {/*

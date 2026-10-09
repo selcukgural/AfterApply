@@ -10727,3 +10727,30 @@ anahtar zorunluluğu. Kapı tüm açık PR'ları (Dependabot dahil) blokluyordu.
 - **Ölçüm (yerel, podman, `td record --parallel 4`):** iki test projesi, 281 sınıf, hepsi geçti, 113 s
   (build dahil). CI'da 30 dakikalık sınır bu yüzden bol.
 - Repo public olduğu için lisans gerekmez. Action commit SHA'ya pinli (`TestDetta/action@7c3cda6`, v0.1.1).
+
+## İnce dokunuşlar Paket 6: tekrar başvuru hatırlatması, iki saat dilimi, teşekkür taslağı — DECIDED (2026-10-09)
+
+Canvas "İnce dokunuşlar — Paket 6"; seçilen 4A (+ panel kartı), 5A, 6A.
+
+- **Tekrar başvuru (`ReminderType.Reapply`):** kullanıcı reddedilen başvuruda 3/6/12 ay seçer
+  (allow-list, başka değer 400). Satır o an yaratılır ve seçilen günün 09:00 İstanbul'una kadar
+  `SnoozedUntil` ile gizli kalır; gün hafta sonu ya da (TR/ülkesi bilinmeyen şirkette) resmî tatile
+  düşerse sonraki iş sabahına kayar (`ReapplyReminders.DueAt`, `BusinessCalendar`). `ReferenceAt` =
+  başvurunun içinde bulunduğu ret (son `→ Rejected` geçişi; yoksa başvuru tarihi): soru her ret için
+  bir kez sorulur, yeniden açılıp tekrar reddedilen başvuruda eski hatırlatma susar. "Gerek yok" ve
+  "Vazgeç" kapatılmış bir satır bırakır — sorunun cevaplandığının kaydı.
+- **Neden takip listesinin dışında:** başvuru kapalı. Takip listesi (`ActiveReminders`), toplu
+  cevaplar (`ResolveSelection` — "hepsini kapat" henüz günü gelmemiş bir hatırlatmayı kapatırdı) ve
+  gece taraması (kapalı başvurunun hatırlatmasını süpürürdü) bu türü açıkça dışarıda bırakır. Kendi
+  sorgusu (`GET /api/reminders/reapply`) ve kendi panel kartı var; kart hatırlatma molasının
+  (`ReminderBreakGate`) içinde.
+- **İki saat dilimi (5A):** yalnızca istemcide, girerken. Kayıtlı mülakat yine tek bir an; şema
+  değişmedi. Ülke kodu → IANA dilimi tablosu `timeZones.ts`'te; çok dilimli ülkede (ABD, Kanada…)
+  liste sorulur, ülkesi bilinmeyen şirkette seçim küçük bir bağlantının arkasında (çoğu şirketin
+  ülkesi boş olduğu için her mülakatta soru çıkmasın diye — tuvaldeki "ülke bilinmiyorsa liste"
+  maddesinden sapma).
+- **Görüşülen kişiler (`Application.InterviewWith`, 200 karakter):** üçüncü kişilerin adları;
+  İK kontağı gibi yalnızca kullanıcının hesabında, hiçbir toplu sayıya girmez, dışa aktarıma girer,
+  mülakatla birlikte silinir. Gizlilik metninin iki cümlesi güncellendi. Teşekkür taslağı adları
+  yazıldığı gibi kullanır; "Hanım/Bey" yok (isimden cinsiyet tahmini gerektirir). Taslak hiçbir yere
+  gönderilmez, kopyalanır.

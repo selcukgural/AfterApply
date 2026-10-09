@@ -11,7 +11,8 @@ import {
   REJECTION_NOTICE_OPTIONS,
   todayDateOnly,
 } from "@/lib/applications/replyPromise";
-import { asksForInterview, INTERVIEW_FORMATS, toInterviewInstant } from "@/lib/applications/interview";
+import { asksForInterview, INTERVIEW_FORMATS, INTERVIEW_WITH_MAX_LENGTH } from "@/lib/applications/interview";
+import { InterviewZoneChoice, interviewInstant } from "@/components/applications/InterviewZoneChoice";
 import { suggestedNextStatus } from "@/lib/applications/nextStatus";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
@@ -26,15 +27,19 @@ export interface StatusChangeExtras {
   /** ISO instant of the new stage's interview, when one was given (interview canvas, 2026-09-27). */
   interviewAt: string | null;
   interviewFormat: InterviewFormat | null;
+  /** Who the user is meeting, as typed; only with an interview. */
+  interviewWith: string | null;
 }
 
 interface StatusChangeSelectProps {
   currentStatus: ApplicationStatus;
+  /** The company's country, so the interview time can be typed on its clock (5A). */
+  companyCountry?: string | null;
   onChangeStatus: (newStatus: ApplicationStatus, note: string | null, extras: StatusChangeExtras) => Promise<void>;
   isSubmitting: boolean;
 }
 
-export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting }: StatusChangeSelectProps) {
+export function StatusChangeSelect({ currentStatus, companyCountry, onChangeStatus, isSubmitting }: StatusChangeSelectProps) {
   const t = useTranslations("applications.statusChange");
   const tStatus = useTranslations("status");
   const otherStatuses = APPLICATION_STATUSES.filter((s) => s !== currentStatus);
@@ -45,6 +50,8 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
   const [interviewDate, setInterviewDate] = useState("");
   const [interviewTime, setInterviewTime] = useState("");
   const [interviewFormat, setInterviewFormat] = useState<InterviewFormat>("Online");
+  const [interviewZone, setInterviewZone] = useState<string | null>(null);
+  const [interviewWith, setInterviewWith] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   if (!isOpen) {
@@ -66,7 +73,7 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
   const showPromise = asksForPromise(selected);
   const showRejectionNotice = asksForRejectionNotice(selected);
   const showInterview = asksForInterview(selected);
-  const interviewAt = showInterview ? toInterviewInstant(interviewDate, interviewTime) : null;
+  const interviewAt = showInterview ? interviewInstant(interviewDate, interviewTime, interviewZone) : null;
   const bounds = promiseDateBounds(todayDateOnly());
 
   const reset = () => {
@@ -77,6 +84,8 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
     setInterviewDate("");
     setInterviewTime("");
     setInterviewFormat("Online");
+    setInterviewZone(null);
+    setInterviewWith("");
   };
 
   const handleConfirm = async () => {
@@ -87,6 +96,7 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
       rejectionNotice: showRejectionNotice ? rejectionNotice : null,
       interviewAt,
       interviewFormat: interviewAt ? interviewFormat : null,
+      interviewWith: interviewAt ? interviewWith.trim() || null : null,
     });
     reset();
   };
@@ -159,6 +169,27 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
               </div>
             </div>
             <InterviewFormatPicker label={t("interviewFormat")} value={interviewFormat} onChange={setInterviewFormat} />
+            <InterviewZoneChoice
+              companyCountry={companyCountry}
+              date={interviewDate}
+              time={interviewTime}
+              zone={interviewZone}
+              onZoneChange={setInterviewZone}
+            />
+            <div className="flex basis-full flex-col gap-1">
+              <label htmlFor="status-change-interview-with" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {t("interviewWith")}
+              </label>
+              <div className="max-w-sm">
+                <Input
+                  id="status-change-interview-with"
+                  placeholder={t("interviewWithPlaceholder")}
+                  maxLength={INTERVIEW_WITH_MAX_LENGTH}
+                  value={interviewWith}
+                  onChange={(e) => setInterviewWith(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </fieldset>
       )}

@@ -188,6 +188,12 @@ export interface ApplicationDetailResponse {
   /** The latest CV uploaded after both this application and the CV it was sent with — only while
    *  the application is still open. */
   newerCvUploadedAt?: string | null;
+  /** Who the user is meeting at the current stage's interview. */
+  interviewWith?: string | null;
+  /** Rejected applications only: when the "apply here again" reminder shows, while one is set. */
+  reapplyRemindAt?: string | null;
+  /** Rejected applications only: whether the "apply here again" question was answered. */
+  reapplyDecided?: boolean;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
@@ -390,6 +396,8 @@ export interface ChangeStatusRequest {
   /** ISO instant; only with a screening or interview stage. */
   interviewAt?: string | null;
   interviewFormat?: InterviewFormat | null;
+  /** Who the user is meeting, as typed; only with an interview. */
+  interviewWith?: string | null;
 }
 
 /** Mirrors AfterApply.Domain.Applications.InterviewFormat. The meeting link is never stored. */
@@ -400,6 +408,30 @@ export interface SetInterviewRequest {
   /** ISO instant, or null to clear. */
   interviewAt: string | null;
   format?: InterviewFormat | null;
+  with?: string | null;
+}
+
+/** "Remind me to apply here again" on a rejected application: 3, 6 or 12 months. */
+export interface SetReapplyReminderRequest {
+  months: 3 | 6 | 12;
+}
+
+export interface ReapplyReminderStateResponse {
+  /** The morning it will show; null once declined or cancelled. */
+  remindAt: string | null;
+}
+
+/** A due "apply here again" reminder. */
+export interface ReapplyReminderResponse {
+  id: string;
+  applicationId: string;
+  companyName: string;
+  jobTitle: string;
+  rejectedAt: string;
+  rejectionReason: RejectionReasonCategory | null;
+  companyLinkedInUrl: string | null;
+  companyWebsite: string | null;
+  companySlug: string | null;
 }
 
 export interface SetReplyPromiseRequest {
@@ -1710,7 +1742,7 @@ export interface StaleApplicationsSummaryResponse {
 // --- Reminders ---------------------------------------------------------------------------------
 
 /** Mirrors AfterApply.Domain.Notifications.ReminderType. */
-export type ReminderType = "FollowUp" | "PossiblyGhosted" | "PromiseMissed" | "InterviewHeld";
+export type ReminderType = "FollowUp" | "PossiblyGhosted" | "PromiseMissed" | "InterviewHeld" | "Reapply";
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderResponse. */
 export type ReminderDeferral =
@@ -1748,6 +1780,8 @@ export interface ReminderResponse {
   deferredFor?: ReminderDeferral | null;
   /** The morning it was moved to (ISO instant). */
   deferredUntil?: string | null;
+  /** InterviewHeld rows: who the user met — the names the thank-you draft greets. */
+  interviewWith?: string | null;
 }
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.UpcomingInterviewResponse. */
@@ -1758,6 +1792,7 @@ export interface UpcomingInterviewResponse {
   status: ApplicationStatus;
   interviewAt: string;
   format: InterviewFormat;
+  interviewWith?: string | null;
 }
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.InterviewOutcome. */

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/dashboard/Card";
+import { ThankYouDraft } from "@/components/dashboard/ThankYouDraft";
 import { Button } from "@/components/ui/Button";
 import { type BulkResult, BulkResultBanner } from "@/components/applications/BulkResultBanner";
 import { Pagination } from "@/components/applications/Pagination";
@@ -508,6 +509,9 @@ export function RemindersPanel() {
                   busy={isBusy(reminder)}
                   onAnswer={(request) => answerRow(reminder, request)}
                 />
+                <div className="mt-2">
+                  <ThankYouDraft interviewWith={reminder.interviewWith} companyName={reminder.companyName} jobTitle={reminder.jobTitle} />
+                </div>
               </div>
             ) : null}
           </li>

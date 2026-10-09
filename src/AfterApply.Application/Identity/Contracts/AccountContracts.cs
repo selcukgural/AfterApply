@@ -40,7 +40,8 @@ public sealed record ApplicationExportItem(
     // The interview the user recorded, with the stage it belongs to.
     DateTimeOffset? InterviewAt = null,
     InterviewFormat? InterviewFormat = null,
-    ApplicationStatus? InterviewStatus = null);
+    ApplicationStatus? InterviewStatus = null,
+    string? InterviewWith = null);
 
 public sealed record ImportBatchExportItem(
     Guid Id,

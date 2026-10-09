@@ -3,6 +3,7 @@ using AfterApply.Api.Extensions;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Localization;
+using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.Extensions.Localization;
 
@@ -225,6 +226,29 @@ public static class ApplicationEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // "Remind me to apply here again" on a rejected application (canvas "İnce dokunuşlar —
+        // Paket 6", 4A). PUT sets or moves it; DELETE answers "no need" / cancels it.
+        group.MapPut("/{id:guid}/reapply-reminder", async (Guid id, SetReapplyReminderRequest request, ClaimsPrincipal user,
+                IReminderService service, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
+                ReapplyResult(await service.SetReapplyReminderAsync(user.GetUserId(), id, request.Months, cancellationToken), localizer))
+            .WithValidation<SetReapplyReminderRequest>()
+            .WithSummary("Set the reminder to apply again to a rejected application")
+            .WithDescription("Months is 3, 6 or 12. The reminder shows on that day at 09:00 Istanbul, moved to the next working " +
+                             "morning when the day is a weekend or holiday. 409 when the application is not rejected.")
+            .Produces<ReapplyReminderStateResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        group.MapDelete("/{id:guid}/reapply-reminder", async (Guid id, ClaimsPrincipal user, IReminderService service,
+                IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
+                ReapplyResult(await service.DeclineReapplyReminderAsync(user.GetUserId(), id, cancellationToken), localizer))
+            .WithSummary("Decline or cancel the reminder to apply again")
+            .WithDescription("Records that the question is answered for this rejection; any reminder set is cancelled.")
+            .Produces<ReapplyReminderStateResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         group.MapGet("/{id:guid}/status-history", async (Guid id, ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
         {
             var history = await service.GetStatusHistoryAsync(user.GetUserId(), id, cancellationToken);
@@ -266,6 +290,18 @@ public static class ApplicationEndpoints
     /// list moved and refresh itself. Handled here rather than in DomainExceptionHandler because
     /// this is the one coded exception that is not a 400 and that carries data worth reading.
     /// </summary>
+    private static IResult ReapplyResult(ReapplyReminderResult result, IStringLocalizer<SharedStrings> localizer) =>
+        result.Outcome switch
+        {
+            ReapplyReminderOutcome.Saved => Results.Ok(new ReapplyReminderStateResponse(result.RemindAt)),
+            ReapplyReminderOutcome.NotRejected => Results.Problem(
+                detail: localizer["REAPPLY_NOT_REJECTED"],
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Conflict",
+                extensions: new Dictionary<string, object?> { ["errorCode"] = "REAPPLY_NOT_REJECTED" }),
+            _ => Results.NotFound()
+        };
+
     private static IResult CountMismatchProblem(BulkCountMismatchException mismatch, IStringLocalizer<SharedStrings> localizer) =>
         Results.Problem(
             detail: localizer[mismatch.ErrorCode, mismatch.ActualCount],

@@ -15,6 +15,7 @@ import { ShareExperienceInvite } from "@/components/applications/ShareExperience
 import { AcceptedClosingNote } from "@/components/applications/AcceptedClosingNote";
 import { OfferCard } from "@/components/applications/OfferCard";
 import { RejectionNote } from "@/components/applications/RejectionNote";
+import { ReapplyBox } from "@/components/applications/ReapplyBox";
 import { ReminderBox } from "@/components/applications/ReminderBox";
 import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
 import { AddEventForm } from "@/components/applications/AddEventForm";
@@ -78,6 +79,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         rejectionNotice: variables.extras.rejectionNotice,
         interviewAt: variables.extras.interviewAt,
         interviewFormat: variables.extras.interviewFormat,
+        interviewWith: variables.extras.interviewWith,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -95,8 +97,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   });
 
   const interviewMutation = useMutation({
-    mutationFn: (variables: { interviewAt: string | null; format: InterviewFormat | null }) =>
-      applicationsApi.setInterview(id, { interviewAt: variables.interviewAt, format: variables.format }),
+    mutationFn: (variables: { interviewAt: string | null; format: InterviewFormat | null; with: string | null }) =>
+      applicationsApi.setInterview(id, { interviewAt: variables.interviewAt, format: variables.format, with: variables.with }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       // The dashboard card lists upcoming interviews and asks about past ones.
@@ -185,6 +187,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             each renders nothing unless its status and data call for it. */}
         <OfferCard application={application} />
         <RejectionNote application={application} statusHistory={statusHistory} />
+        <ReapplyBox application={application} />
         <ReminderBox application={application} />
         <div className="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
@@ -219,8 +222,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               application={application}
               isSaving={interviewMutation.isPending}
               error={interviewMutation.error instanceof Error ? interviewMutation.error.message : null}
-              onSave={async (interviewAt, format) => {
-                await interviewMutation.mutateAsync({ interviewAt, format });
+              onSave={async (interviewAt, format, interviewWith) => {
+                await interviewMutation.mutateAsync({ interviewAt, format, with: interviewWith });
               }}
             />
             <ReplyPromiseField
@@ -296,6 +299,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           )}
           <StatusChangeSelect
             currentStatus={application.status}
+            companyCountry={application.companyCountry}
             isSubmitting={changeStatusMutation.isPending}
             onChangeStatus={async (newStatus, note, extras) => {
               await changeStatusMutation.mutateAsync({ newStatus, note, extras });

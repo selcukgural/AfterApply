@@ -7,6 +7,7 @@ using AfterApply.Application.Notifications;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Board;
 using AfterApply.Domain.Common;
+using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Notifications;
@@ -566,7 +567,7 @@ internal sealed class ApplicationService(
         return ChangeStatusCoreAsync(userId, applicationId, request.NewStatus,
             request.ChangedAt ?? DateTimeOffset.UtcNow, StatusChangeContext.Manual(request.Note),
             request.PromisedReplyBy, request.RejectionNotice, cancellationToken,
-            request.InterviewAt, request.InterviewFormat);
+            request.InterviewAt, request.InterviewFormat, request.InterviewWith);
     }
 
     public Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId,
@@ -579,7 +580,7 @@ internal sealed class ApplicationService(
     private async Task<ApplicationDetailResponse?> ChangeStatusCoreAsync(Guid userId, Guid applicationId,
         ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context,
         DateOnly? promisedReplyBy, RejectionNotice? rejectionNotice, CancellationToken cancellationToken,
-        DateTimeOffset? interviewAt = null, InterviewFormat? interviewFormat = null)
+        DateTimeOffset? interviewAt = null, InterviewFormat? interviewFormat = null, string? interviewWith = null)
     {
         var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
         if (application is null)
@@ -603,7 +604,7 @@ internal sealed class ApplicationService(
         var interviewEvents = application.Events.Count;
         if (interviewAt is not null)
         {
-            application.SetInterview(interviewAt, interviewFormat, DateTimeOffset.UtcNow);
+            application.SetInterview(interviewAt, interviewFormat, DateTimeOffset.UtcNow, interviewWith);
         }
 
         // application.Events/StatusHistory were never Included (FindOwnedAsync
@@ -666,7 +667,7 @@ internal sealed class ApplicationService(
         }
 
         var eventsBefore = application.Events.Count;
-        application.SetInterview(request.InterviewAt, request.Format, DateTimeOffset.UtcNow);
+        application.SetInterview(request.InterviewAt, request.Format, DateTimeOffset.UtcNow, request.With);
         // Added explicitly for the reason ChangeStatusCoreAsync gives: Events was never Included.
         foreach (var addedEvent in application.Events.Skip(eventsBefore))
         {
@@ -992,6 +993,24 @@ internal sealed class ApplicationService(
                 a => a.UserId == application.UserId && a.Id != application.Id && inProgress.Contains(a.Status), cancellationToken)
             : null;
 
+        // The "apply here again" question on a rejected application (canvas "İnce dokunuşlar —
+        // Paket 6", 4A), keyed by the rejection the application is in — the same reading as
+        // ReminderService.FindRejectedAsync.
+        DateTimeOffset? reapplyRemindAt = null;
+        var reapplyDecided = false;
+        if (application.Status == ApplicationStatus.Rejected)
+        {
+            var rejectedAt = await dbContext.ApplicationStatusHistories
+                .Where(h => h.ApplicationId == application.Id && h.ToStatus == ApplicationStatus.Rejected)
+                .MaxAsync(h => (DateTimeOffset?)h.ChangedAt, cancellationToken) ?? application.AppliedAt;
+            var reapply = await dbContext.Reminders
+                .Where(r => r.ApplicationId == application.Id && r.Type == ReminderType.Reapply && r.ReferenceAt == rejectedAt)
+                .Select(r => new { r.DismissedAt, r.SnoozedUntil })
+                .FirstOrDefaultAsync(cancellationToken);
+            reapplyDecided = reapply is not null;
+            reapplyRemindAt = reapply is { DismissedAt: null } ? reapply.SnoozedUntil : null;
+        }
+
         ReplyPromiseOutcome? promiseOutcome = null;
         if (application is { PromisedReplyBy: { } promisedBy, PromisedReplySince: { } promisedSince })
         {
@@ -1017,7 +1036,9 @@ internal sealed class ApplicationService(
             job?.ClosedAt, job?.PublishedAt, medianResponseDays,
             rejectionPattern?.Category, rejectionPattern?.Count, rejectionPattern?.OutOf,
             otherInterviewing,
-            cvDocument?.UploadedAt, newerCvUploadedAt);
+            cvDocument?.UploadedAt, newerCvUploadedAt,
+            application.CurrentInterviewAt is null ? null : application.InterviewWith,
+            reapplyRemindAt, reapplyDecided);
     }
 
     /// <summary>
