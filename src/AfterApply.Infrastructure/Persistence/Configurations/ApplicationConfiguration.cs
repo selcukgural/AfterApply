@@ -34,6 +34,7 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
         builder.Property(a => a.PromisedReplyStatus).HasConversion<string>().HasMaxLength(50);
         builder.Property(a => a.InterviewFormat).HasConversion<string>().HasMaxLength(20);
         builder.Property(a => a.InterviewStatus).HasConversion<string>().HasMaxLength(50);
+        builder.Property(a => a.InterviewWith).HasMaxLength(DomainApplication.InterviewWithMaxLength);
         builder.Ignore(a => a.CurrentInterviewAt);
         builder.Property(a => a.RejectionNotice).HasConversion<string>().HasMaxLength(50);
 

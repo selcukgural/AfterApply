@@ -93,7 +93,7 @@ describe("the profile page", () => {
     // since 2026-09-24, the invitation to rate ended processes — and nothing else, and the way
     // back is the profile — the gate never starts a break itself.
     expect(dashboard).toContain(
-      "<ReminderBreakGate>\n            <StaleApplicationsBanner />\n            <RemindersPanel />\n            <EndedProcessesCard />\n          </ReminderBreakGate>",
+      "<ReminderBreakGate>\n            <StaleApplicationsBanner />\n            <RemindersPanel />\n            <ReapplyRemindersCard />\n            <EndedProcessesCard />\n          </ReminderBreakGate>",
     );
     expect(gate).toContain('href="/profile"');
     expect(gate).not.toContain("useStartBreak");

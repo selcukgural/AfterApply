@@ -18,6 +18,8 @@ import type {
   ChangeStatusRequest,
   SetInterviewRequest,
   SetReplyPromiseRequest,
+  SetReapplyReminderRequest,
+  ReapplyReminderStateResponse,
   CreateApplicationRequest,
   PagedResult,
   UpdateApplicationRequest,
@@ -91,6 +93,17 @@ export const applicationsApi = {
       method: "PUT",
       body: JSON.stringify(request),
     }),
+
+  /** Sets or moves the "apply here again" reminder of a rejected application. */
+  setReapplyReminder: (id: string, request: SetReapplyReminderRequest) =>
+    apiFetch<ReapplyReminderStateResponse>(`/api/applications/${id}/reapply-reminder`, {
+      method: "PUT",
+      body: JSON.stringify(request),
+    }),
+
+  /** "No need" before one is set, "cancel" after. */
+  declineReapplyReminder: (id: string) =>
+    apiFetch<ReapplyReminderStateResponse>(`/api/applications/${id}/reapply-reminder`, { method: "DELETE" }),
 
   setReplyPromise: (id: string, request: SetReplyPromiseRequest) =>
     apiFetch<ApplicationDetailResponse>(`/api/applications/${id}/reply-promise`, {

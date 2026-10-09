@@ -15,5 +15,12 @@ public enum ReminderType
     /// heard of it yet: "how did it go?", answered on the row by the next stage, a reply date or a
     /// rejection. Takes the follow-up's place for the follow-up window after the interview.
     /// ReferenceAt is the interview itself, so a moved interview raises a fresh question.</summary>
-    InterviewHeld
+    InterviewHeld,
+
+    /// <summary>"Remind me to apply here again" — asked for by the user on a rejected application,
+    /// never created by the scan. Born snoozed until the chosen day (SnoozedUntil), it lives outside
+    /// the follow-up list: the application is closed, so the list, its bulk answers and the nightly
+    /// sweep all leave it alone, and it surfaces through its own query once the day comes.
+    /// ReferenceAt is the rejection it answers, so a later rejection asks afresh.</summary>
+    Reapply
 }

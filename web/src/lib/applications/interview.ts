@@ -29,6 +29,9 @@ export function nextStagesAfter(current: ApplicationStatus | null | undefined): 
   return NEXT_STAGES.slice(index + 1);
 }
 
+/** Mirrors Application.InterviewWithMaxLength on the server. */
+export const INTERVIEW_WITH_MAX_LENGTH = 200;
+
 /** Mirrors InterviewRules on the server. */
 export const MAX_INTERVIEW_DAYS_BACK = 30;
 export const MAX_INTERVIEW_DAYS_AHEAD = 365;

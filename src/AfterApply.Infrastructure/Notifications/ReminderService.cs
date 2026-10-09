@@ -44,8 +44,11 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     {
         return dbContext.Reminders
             .Where(r => r.UserId == userId && r.DismissedAt == null && (r.SnoozedUntil == null || r.SnoozedUntil <= now))
+            // An "apply here again" reminder is about a closed application and has its own query
+            // (GetDueReapplyRemindersAsync); the terminal filter below would drop it anyway.
+            .Where(r => r.Type != ReminderType.Reapply)
             .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
-                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status, a.PromisedReplyBy, a.InterviewAt, a.InterviewStatus })
+                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status, a.PromisedReplyBy, a.InterviewAt, a.InterviewStatus, a.InterviewWith })
             // A closed application has nothing left to remind about. Status changes retire
             // reminders as they happen (ApplicationService) and the nightly scan sweeps up the
             // rest; this filter is the guarantee that neither has to be perfect for the list
@@ -55,7 +58,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             // anywhere else has answered it, and the nightly scan retires the row.
             .Where(x => x.r.Type != ReminderType.InterviewHeld || x.InterviewStatus == x.Status)
             .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
-                (x, c) => new { x.r, x.JobTitle, x.PromisedReplyBy, x.Status, x.InterviewAt, CompanyName = c.Name })
+                (x, c) => new { x.r, x.JobTitle, x.PromisedReplyBy, x.Status, x.InterviewAt, x.InterviewWith, CompanyName = c.Name })
             // An interview question first: it is about yesterday, and its answer is only easy while
             // the interview is fresh. Then the application that has waited longest, and among
             // equals the reminder created first: the one that actually needs attention is on page
@@ -72,7 +75,8 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                 x.Status,
                 x.r.Type == ReminderType.InterviewHeld ? x.InterviewAt : null,
                 x.r.DeferredFor,
-                x.r.DeferredFor == null ? null : x.r.SnoozedUntil));
+                x.r.DeferredFor == null ? null : x.r.SnoozedUntil,
+                x.r.Type == ReminderType.InterviewHeld ? x.InterviewWith : null));
     }
 
     public Task<PagedResult<ReminderResponse>> GetActiveRemindersAsync(Guid userId, GetRemindersQuery query,
@@ -169,7 +173,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     /// </summary>
     private IQueryable<Reminder> ResolveSelection(Guid userId, ReminderSelection selection)
     {
-        var open = dbContext.Reminders.Where(r => r.UserId == userId && r.DismissedAt == null);
+        // Never an "apply here again" reminder: those are not on the list the bulk answers act on,
+        // and an "all" selection would otherwise close one still waiting for its day.
+        var open = dbContext.Reminders.Where(r => r.UserId == userId && r.DismissedAt == null && r.Type != ReminderType.Reapply);
         return selection.Ids is { Count: > 0 } ids ? open.Where(r => ids.Contains(r.Id)) : open;
     }
 
@@ -419,11 +425,11 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             .Where(a => a.UserId == userId && a.InterviewAt != null && a.InterviewStatus == a.Status
                         && a.InterviewAt >= from && a.InterviewAt <= to)
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id,
-                (a, c) => new { a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.InterviewAt, a.InterviewFormat })
+                (a, c) => new { a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.InterviewAt, a.InterviewFormat, a.InterviewWith })
             .OrderBy(x => x.InterviewAt)
             .Take(MaxUpcomingInterviews)
             .Select(x => new UpcomingInterviewResponse(x.Id, x.CompanyName, x.JobTitle, x.Status,
-                x.InterviewAt!.Value, x.InterviewFormat ?? InterviewFormat.Online))
+                x.InterviewAt!.Value, x.InterviewFormat ?? InterviewFormat.Online, x.InterviewWith))
             .ToListAsync(cancellationToken);
     }
 
@@ -432,6 +438,122 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     private const int UpcomingInterviewDays = 14;
 
     private const int MaxUpcomingInterviews = 10;
+
+    public async Task<ReapplyReminderResult> SetReapplyReminderAsync(Guid userId, Guid applicationId, int months,
+        CancellationToken cancellationToken)
+    {
+        var target = await FindRejectedAsync(userId, applicationId, cancellationToken);
+        if (target.Outcome != ReapplyReminderOutcome.Saved)
+        {
+            return new ReapplyReminderResult(target.Outcome);
+        }
+
+        var now = _timeProvider.GetUtcNow();
+        var due = ReapplyReminders.DueAt(now, months, BusinessCalendar.UsesTurkishHolidays(target.CompanyCountry));
+        var reminder = await FindReapplyRowAsync(applicationId, target.RejectedAt, cancellationToken);
+        if (reminder is null)
+        {
+            reminder = Reminder.Create(userId, applicationId, ReminderType.Reapply, target.RejectedAt, 0, now);
+            dbContext.Reminders.Add(reminder);
+        }
+
+        // Born (or put back) snoozed until its morning: the snooze is what keeps it out of sight.
+        reminder.Reopen();
+        reminder.Snooze(due);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return new ReapplyReminderResult(ReapplyReminderOutcome.Saved, due);
+    }
+
+    public async Task<ReapplyReminderResult> DeclineReapplyReminderAsync(Guid userId, Guid applicationId,
+        CancellationToken cancellationToken)
+    {
+        var target = await FindRejectedAsync(userId, applicationId, cancellationToken);
+        if (target.Outcome != ReapplyReminderOutcome.Saved)
+        {
+            return new ReapplyReminderResult(target.Outcome);
+        }
+
+        var now = _timeProvider.GetUtcNow();
+        var reminder = await FindReapplyRowAsync(applicationId, target.RejectedAt, cancellationToken);
+        if (reminder is null)
+        {
+            // A closed row is the record that the question was answered "no" for this rejection.
+            reminder = Reminder.Create(userId, applicationId, ReminderType.Reapply, target.RejectedAt, 0, now);
+            dbContext.Reminders.Add(reminder);
+        }
+
+        reminder.Dismiss(now);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return new ReapplyReminderResult(ReapplyReminderOutcome.Saved);
+    }
+
+    public async Task<IReadOnlyList<ReapplyReminderResponse>> GetDueReapplyRemindersAsync(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var rows = await dbContext.Reminders
+            .Where(r => r.UserId == userId && r.Type == ReminderType.Reapply && r.DismissedAt == null
+                        && r.SnoozedUntil != null && r.SnoozedUntil <= now)
+            .Join(dbContext.Applications.Where(a => a.UserId == userId && a.Status == ApplicationStatus.Rejected),
+                r => r.ApplicationId, a => a.Id, (r, a) => new { r, a })
+            // Only the reminder of the rejection the application is in now: one set before a
+            // reopen-and-reject-again answered a rejection that is no longer the last word.
+            .Where(x => (dbContext.ApplicationStatusHistories
+                    .Where(h => h.ApplicationId == x.a.Id && h.ToStatus == ApplicationStatus.Rejected)
+                    .Max(h => (DateTimeOffset?)h.ChangedAt) ?? x.a.AppliedAt) == x.r.ReferenceAt)
+            .Join(dbContext.Companies, x => x.a.CompanyId, c => c.Id, (x, c) => new
+            {
+                x.r.Id, x.r.ApplicationId, CompanyName = c.Name, x.a.JobTitle, x.r.ReferenceAt, x.r.SnoozedUntil,
+                Reason = dbContext.ApplicationStatusHistories
+                    .Where(h => h.ApplicationId == x.a.Id && h.ToStatus == ApplicationStatus.Rejected)
+                    .OrderByDescending(h => h.ChangedAt)
+                    .Select(h => h.RejectionReasonCategory)
+                    .FirstOrDefault(),
+                c.LinkedInUrl, c.Website, c.Slug
+            })
+            .OrderBy(x => x.SnoozedUntil)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x => new ReapplyReminderResponse(x.Id, x.ApplicationId, x.CompanyName, x.JobTitle, x.ReferenceAt,
+                x.Reason, x.LinkedInUrl, x.Website, x.Slug))
+            .ToList();
+    }
+
+    private sealed record RejectedTarget(ReapplyReminderOutcome Outcome, DateTimeOffset RejectedAt = default,
+        string? CompanyCountry = null);
+
+    /// <summary>One of the user's applications, only while it is rejected, with the moment of the
+    /// rejection it is in — the latest move to Rejected, or the applied date for a row that arrived
+    /// rejected with no such move (an import). That moment keys the reminder (ReferenceAt).</summary>
+    private async Task<RejectedTarget> FindRejectedAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)
+    {
+        var application = await dbContext.Applications
+            .Where(a => a.Id == applicationId && a.UserId == userId)
+            .Select(a => new
+            {
+                a.Status, a.AppliedAt,
+                LastRejectedAt = dbContext.ApplicationStatusHistories
+                    .Where(h => h.ApplicationId == a.Id && h.ToStatus == ApplicationStatus.Rejected)
+                    .Max(h => (DateTimeOffset?)h.ChangedAt),
+                Country = dbContext.Companies.Where(c => c.Id == a.CompanyId).Select(c => c.Country).FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (application is null)
+        {
+            return new RejectedTarget(ReapplyReminderOutcome.NotFound);
+        }
+
+        return application.Status != ApplicationStatus.Rejected
+            ? new RejectedTarget(ReapplyReminderOutcome.NotRejected)
+            : new RejectedTarget(ReapplyReminderOutcome.Saved, application.LastRejectedAt ?? application.AppliedAt, application.Country);
+    }
+
+    private Task<Reminder?> FindReapplyRowAsync(Guid applicationId, DateTimeOffset rejectedAt, CancellationToken cancellationToken) =>
+        dbContext.Reminders.FirstOrDefaultAsync(
+            r => r.ApplicationId == applicationId && r.Type == ReminderType.Reapply && r.ReferenceAt == rejectedAt,
+            cancellationToken);
 
     public async Task<ReminderPauseResponse> GetPauseAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -604,7 +726,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         // Every open reminder, across users like the application scan above: the sweep that
         // retires reminders is the other half of the job that creates them.
         var activeReminders = await dbContext.Reminders
-            .Where(r => r.DismissedAt == null)
+            // The user's own "apply here again" reminders are about rejected applications by
+            // design; the sweep below would take them for leftovers of a closed application.
+            .Where(r => r.DismissedAt == null && r.Type != ReminderType.Reapply)
             .Select(r => new { r.Id, r.UserId, r.ApplicationId, r.Type, r.ReferenceAt })
             .ToListAsync(cancellationToken);
 

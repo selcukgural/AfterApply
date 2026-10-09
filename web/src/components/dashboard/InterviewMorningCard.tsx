@@ -98,6 +98,7 @@ function MorningCard({ interview, now }: { interview: UpcomingInterviewResponse;
           </Link>
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {tStatus(interview.status)} · {tInterview(`format.${interview.format}`)}
+            {interview.interviewWith && <> · {t("with", { names: interview.interviewWith })}</>}
             {application && <> · {t("applied", { ago: daysAgo(application.appliedAt, locale) })}</>}
           </span>
         </div>

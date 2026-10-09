@@ -7,9 +7,10 @@ import {
   asksForInterview,
   formatInterviewDate,
   formatInterviewTime,
+  INTERVIEW_WITH_MAX_LENGTH,
   splitInstant,
-  toInterviewInstant,
 } from "@/lib/applications/interview";
+import { InterviewZoneChoice, interviewInstant } from "@/components/applications/InterviewZoneChoice";
 import { AddToCalendar } from "@/components/applications/AddToCalendar";
 import { InterviewFormatPicker } from "@/components/applications/StatusChangeSelect";
 import { Input } from "@/components/ui/Input";
@@ -19,7 +20,7 @@ interface InterviewFieldProps {
   application: ApplicationDetailResponse;
   isSaving: boolean;
   error: string | null;
-  onSave: (interviewAt: string | null, format: InterviewFormat | null) => Promise<void>;
+  onSave: (interviewAt: string | null, format: InterviewFormat | null, interviewWith: string | null) => Promise<void>;
 }
 
 /**
@@ -37,6 +38,8 @@ export function InterviewField({ application, isSaving, error, onSave }: Intervi
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [format, setFormat] = useState<InterviewFormat>("Online");
+  const [zone, setZone] = useState<string | null>(null);
+  const [withWhom, setWithWhom] = useState("");
   // Read once per mount: whether the interview is behind us only decides between the calendar
   // button and "done", and a page left open across the interview can live with the old answer.
   const [now] = useState(() => Date.now());
@@ -50,12 +53,15 @@ export function InterviewField({ application, isSaving, error, onSave }: Intervi
     setDate(parts.date);
     setTime(parts.time);
     setFormat(interviewFormat);
+    // The stored instant reads back on the reader's own clock; a zone is only for typing a new one.
+    setZone(null);
+    setWithWhom(application.interviewWith ?? "");
     setIsEditing(true);
   };
 
-  const instant = toInterviewInstant(date, time);
+  const instant = interviewInstant(date, time, zone);
   const save = async () => {
-    await onSave(instant, format);
+    await onSave(instant, format, withWhom.trim() || null);
     setIsEditing(false);
   };
 
@@ -74,6 +80,16 @@ export function InterviewField({ application, isSaving, error, onSave }: Intervi
               <Input type="time" aria-label={tChange("interviewTime")} value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <InterviewFormatPicker label={tChange("interviewFormat")} value={format} onChange={setFormat} />
+            <InterviewZoneChoice companyCountry={application.companyCountry} date={date} time={time} zone={zone} onZoneChange={setZone} />
+            <div className="w-full max-w-sm">
+              <Input
+                aria-label={tChange("interviewWith")}
+                placeholder={tChange("interviewWithPlaceholder")}
+                maxLength={INTERVIEW_WITH_MAX_LENGTH}
+                value={withWhom}
+                onChange={(e) => setWithWhom(e.target.value)}
+              />
+            </div>
             <Button className="px-3 py-1 text-xs" onClick={save} disabled={isSaving || instant === null}>
               {isSaving ? t("saving") : t("save")}
             </Button>
@@ -89,6 +105,9 @@ export function InterviewField({ application, isSaving, error, onSave }: Intervi
             <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
               {tInterview(`format.${interviewFormat}`)}
             </span>
+            {application.interviewWith && (
+              <span className="text-xs text-gray-600 dark:text-gray-400">{t("with", { names: application.interviewWith })}</span>
+            )}
             {isPast ? (
               <span className="text-xs text-gray-500 dark:text-gray-400">{t("past")}</span>
             ) : (
@@ -107,7 +126,7 @@ export function InterviewField({ application, isSaving, error, onSave }: Intervi
             </button>
             <button
               type="button"
-              onClick={() => onSave(null, null)}
+              onClick={() => onSave(null, null, null)}
               disabled={isSaving}
               className="text-xs text-gray-500 hover:underline disabled:opacity-50 dark:text-gray-400"
             >

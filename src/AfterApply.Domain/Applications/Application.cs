@@ -86,6 +86,13 @@ public sealed class Application : AuditableEntity
     /// <summary>The stage the interview belongs to. Null exactly when <see cref="InterviewAt"/> is.</summary>
     public ApplicationStatus? InterviewStatus { get; private set; }
 
+    /// <summary>Who the user is meeting, as they wrote it ("Ece Kaya, Burak Demir") — the names the
+    /// thank-you draft greets. The user's own note about third parties: never shared, never part of
+    /// any aggregate, cleared with the interview.</summary>
+    public string? InterviewWith { get; private set; }
+
+    public const int InterviewWithMaxLength = 200;
+
     /// <summary>The interview of the stage the application is in now, or null — one recorded for an
     /// earlier stage has already happened as far as anything downstream is concerned.</summary>
     public DateTimeOffset? CurrentInterviewAt => InterviewStatus == Status ? InterviewAt : null;
@@ -250,13 +257,15 @@ public sealed class Application : AuditableEntity
     /// allowed, it is the user's record. A new or moved date is an InterviewScheduled event on the
     /// timeline; the format alone changing is not.
     /// </summary>
-    public void SetInterview(DateTimeOffset? interviewAt, InterviewFormat? format, DateTimeOffset now)
+    public void SetInterview(DateTimeOffset? interviewAt, InterviewFormat? format, DateTimeOffset now,
+        string? with = null)
     {
         if (interviewAt is null)
         {
             InterviewAt = null;
             InterviewFormat = null;
             InterviewStatus = null;
+            InterviewWith = null;
             Touch(now);
             return;
         }
@@ -273,6 +282,7 @@ public sealed class Application : AuditableEntity
         InterviewAt = at;
         InterviewFormat = format ?? Applications.InterviewFormat.Online;
         InterviewStatus = Status;
+        InterviewWith = string.IsNullOrWhiteSpace(with) ? null : with.Trim();
         Touch(now);
 
         if (moved)

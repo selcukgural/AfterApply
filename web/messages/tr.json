@@ -757,6 +757,17 @@
         "RepublicDay": "29 Ekim’e denk geldiği için bugüne aldık.",
         "RamadanFeast": "Ramazan Bayramı’na denk geldiği için bugüne aldık.",
         "SacrificeFeast": "Kurban Bayramı’na denk geldiği için bugüne aldık."
+      },
+      "reapply": "Tekrar başvuru",
+      "thankYou": {
+        "open": "Teşekkür notu taslağı",
+        "openNamed": "Teşekkür notu taslağı: {names}",
+        "title": "Teşekkür notu taslağı",
+        "language": "Taslağın dili",
+        "copy": "Kopyala",
+        "copied": "Kopyalandı",
+        "notSent": "Biz göndermeyiz; kopyalayıp kendi e-postandan yollarsın.",
+        "close": "Kapat"
       }
     },
     "stale": {
@@ -825,7 +836,18 @@
       "saved": "Kaydettiğin gün saklandı — ilan yayından kalksa da burada",
       "readAll": "İlanın tamamını oku",
       "goTo": "Başvuruya git",
-      "copyHrEmail": "İK e-posta adresini kopyala"
+      "copyHrEmail": "İK e-posta adresini kopyala",
+      "with": "Kimle: {names}"
+    },
+    "reapply": {
+      "title": "Tekrar başvurma zamanı",
+      "rejected": "Ret: {ago}",
+      "body": "Tekrar başvurmak için hatırlatmamı istemiştin.",
+      "reason": "Geçen sefer belirtilen sebep: {reason}.",
+      "openings": "Şirketin ilanlarına bak",
+      "later": "3 ay sonra tekrar",
+      "close": "Kapat",
+      "error": "İşlem tamamlanamadı, tekrar dene."
     }
   },
   "applications": {
@@ -1022,7 +1044,8 @@
         "save": "Kaydet",
         "saving": "Kaydediliyor...",
         "cancel": "Vazgeç",
-        "past": "Yapıldı"
+        "past": "Yapıldı",
+        "with": "Kimle: {names}"
       },
       "copyHrEmail": "İK e-posta adresini kopyala",
       "copyJobUrl": "İlan bağlantısını kopyala",
@@ -1064,7 +1087,15 @@
         "others": "{count, plural, one {Görüşme sürecinde # başvurun daha var} other {Görüşme sürecinde # başvurun daha var}} — onlara teklifi haber vermek süreci hızlandırabilir."
       },
       "cvVersion": "{date} sürümü",
-      "newerCv": "Bu başvurudan sonra yeni bir CV yükledin ({date}); şirketteki bu sürüm."
+      "newerCv": "Bu başvurudan sonra yeni bir CV yükledin ({date}); şirketteki bu sürüm.",
+      "reapply": {
+        "title": "İleride tekrar başvurmak istersen hatırlatayım",
+        "body": "Bazı şirketler aynı role yeniden başvuru için birkaç ay bekler. Ne zaman hatırlatayım?",
+        "months": "{count, plural, =12 {1 yıl sonra} other {# ay sonra}}",
+        "noNeed": "Gerek yok",
+        "set": "Panelinde hatırlatacağım: {date}",
+        "cancel": "Vazgeç"
+      }
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -1085,7 +1116,9 @@
       "interviewHint": "Girersen bir gün önce hatırlatırız, ertesi gün de nasıl geçtiğini sorarız.",
       "interviewDate": "Tarih",
       "interviewTime": "Saat",
-      "interviewFormat": "Nasıl"
+      "interviewFormat": "Nasıl",
+      "interviewWith": "Kimle görüşeceksin? (isteğe bağlı)",
+      "interviewWithPlaceholder": "Ad Soyad; birden çoksa virgülle"
     },
     "statusHistory": {
       "empty": "Henüz bir durum değişikliği yok.",
@@ -1311,6 +1344,14 @@
         "today": "bugün",
         "tomorrow": "yarın",
         "yesterday": "dün"
+      },
+      "zone": {
+        "legend": "Bu saat kimin saati?",
+        "mine": "Benim saatim ({city})",
+        "theirs": "Şirketin saati ({city})",
+        "pick": "Saat dilimi",
+        "otherZone": "Saat başka bir saat diliminde mi?",
+        "preview": "Senin saatinle {own} · {city} saatiyle {theirs}"
       }
     }
   },
@@ -1539,7 +1580,7 @@
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları, girdiğiniz görüşme tarihi için bir gün önceki hatırlatma ve ertesi gün “nasıl geçti?” sorusu).",
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
-      "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
+      "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür. Bir görüşmeyi kaydederken isteğe bağlı olarak kiminle görüşeceğinizi de yazabilirsiniz; bu adlar da aynı şekilde yalnızca sizin hesabınızda durur, teşekkür notu taslağında kullanılır ve görüşme silindiğinde ya da hesabınızı sildiğinizde birlikte silinir.",
       "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, aday deneyimi, blog yorumu, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark, şirket sayfasındaki \"dönüş alamadım\" bildirimi) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
       "item7": "Haftalık ilan eşleştirmeyi (ücretli özellik) kullanırsanız: arama kriteri olarak kaydettiğiniz pozisyon adları (en fazla üç) ve konum. Bunlar hesabınızda saklanır ve haftada bir, LinkedIn ve kariyer.net'te arama olarak kullanılır — aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın. Bulunan ilanlar sizin için sınırlı bir süre tutulur; hangilerine zaten başvurduğunuz kendi başvurularınızdan hesaplanır ve ayrı bir kayıt olarak asla saklanmaz. Ayrıca rıza verirseniz her ilan için hesaplanan uyum puanı, kısa gerekçesi ve uyan/eksik kriter listesi de hesabınızda tutulur — bkz. \"Haftalık ilan eşleştirme\"."
     },
@@ -1723,7 +1764,7 @@
     "aggregates": {
       "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
       "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik, kayıp oranı, sözünü tutma ve reddi bildirme oranı. Bunu yaparken:",
-      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum, durum değişikliği tarihleri ve verirsen iki isteğe bağlı cevaptır: şirketin söz verdiği dönüş tarihi ve reddi nasıl öğrendiğin. Notların, görüşme tarihin, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
+      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum, durum değişikliği tarihleri ve verirsen iki isteğe bağlı cevaptır: şirketin söz verdiği dönüş tarihi ve reddi nasıl öğrendiğin. Notların, görüşme tarihin ve görüştüğün kişilerin adları, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
       "which": "Yalnızca olduğu sırada kaydedilen başvurular sayılır: başvurduğun günden en geç 7 gün sonra eklenenler — elle, eklentiyle, e-posta önerisiyle ya da içe aktarmayla, fark etmez. LinkedIn'den toplu aktarılan eski başvurular toplu sayılara girmez. Sonuçlanmamış bir başvuru da, son 90 günde siteye hiç girmediysen sayılmaz; takibi bırakan birinin açık başvuruları şirketin cevap vermediği anlamına gelmez. Geri aldığın bir otomatik e-posta güncellemesi ya da toplu değişiklik hiç olmamış sayılır.",
       "sector": "Sektör tablosu herkese açıktır ve şirket adı içermez. Bir sektör satırı, en az 5 farklı kişinin toplam 30 başvurusu birikmeden gösterilmez; tek bir kişi başvuruların yarısından fazlasını oluşturuyorsa satır kapalı kalır.",
       "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 20 başvuru, en az 5 farklı kişiden gelmeden hiçbir sayı göstermez; tek bir kişi başvuruların üçte birinden fazlasını oluşturuyorsa da kapalı kalır. Eşiğin altında kaç başvuru ya da kişi eksik olduğu yazılmaz.",
@@ -2601,7 +2642,7 @@
       },
       "interview": {
         "title": "Görüşme tarihi ve \"Nasıl geçti?\"",
-        "body": "Başvuru Ön Değerlendirme ya da bir mülakat aşamasına geçerken görüşmenin tarihini, saatini ve nasıl yapılacağını (Online, Yerinde, Telefon) girebilirsiniz; sonradan gelen ya da değişen bir tarih için detaydaki \"Görüşme\" satırını kullanın. \"Takvimime ekle\" ile Google Takvim'e ya da .ics dosyasıyla Outlook ve Apple Takvim'e eklersiniz; takviminize biz yazmayız ve görüşme bağlantısını saklamayız. Görüşmeden bir gün önce zil hatırlatır, görüşmeden sonra panelde \"Nasıl geçti?\" sorusu çıkar: sonraki aşamaya geçtiyseniz aşamayı, dönüş bekliyorsanız söylenen süreyi seçersiniz, olumsuz döndülerse başvuru reddedildi olarak kapanır. Her cevap geri alınabilir. Görüşme tarihi hiçbir toplu orana katılmaz."
+        "body": "Başvuru Ön Değerlendirme ya da bir mülakat aşamasına geçerken görüşmenin tarihini, saatini ve nasıl yapılacağını (Online, Yerinde, Telefon) girebilirsiniz; sonradan gelen ya da değişen bir tarih için detaydaki \"Görüşme\" satırını kullanın. \"Takvimime ekle\" ile Google Takvim'e ya da .ics dosyasıyla Outlook ve Apple Takvim'e eklersiniz; takviminize biz yazmayız ve görüşme bağlantısını saklamayız. Görüşmeden bir gün önce zil hatırlatır, görüşmeden sonra panelde \"Nasıl geçti?\" sorusu çıkar: sonraki aşamaya geçtiyseniz aşamayı, dönüş bekliyorsanız söylenen süreyi seçersiniz, olumsuz döndülerse başvuru reddedildi olarak kapanır. Her cevap geri alınabilir. Görüşme tarihi hiçbir toplu orana katılmaz. Şirket başka bir saat dilimindeyse saati girerken \"Bu saat kimin saati?\" diye sorulur: e-postadaki saati şirketin saatiyle girersiniz, karşılığı sizin saatinizle hemen altında yazar. Şirketin ülkesi bilinmiyorsa aynı seçim küçük bir bağlantının arkasındadır. İsterseniz kiminle görüşeceğinizi de yazabilirsiniz; adlar görüşme sabahı kartında ve ertesi günkü \"Nasıl geçti?\" satırında görünür. O satırda, bu adlarla hazırlanmış bir teşekkür notu taslağı (Türkçe ya da İngilizce) açılır; kopyalayıp kendi e-postanızdan gönderirsiniz, biz göndermeyiz."
       },
       "reminderBox": {
         "title": "Hatırlatayım kutusu ve yayından kalkan ilanlar",
@@ -2623,6 +2664,10 @@
         "title": "Hızlı bul: biri aradığında",
         "body": "Bir şirketten beklenmedik bir telefon geldiğinde hangi başvuru olduğunu hatırlamak için birkaç saniyeniz vardır. Giriş yaptığınız her sayfada Ctrl K (Mac'te ⌘K) tuşlarına basın ya da Başvurular'daki arama kutusunun sağındaki kısayol düğmesine tıklayın, şirketin ya da pozisyonun adını yazın. Eşleşen başvurunun özeti açılır: pozisyon, durum, ne zaman başvurduğunuz, gönderdiğiniz CV ve sürümü, İK kontağı, notunuz, ilandan kısa bir bölüm ve aynı şirketteki diğer başvurularınız. Birden fazla sonuç varsa ok tuşlarıyla aralarında gezinir, Enter ile başvuruyu açarsınız. \"Görüşme notu ekle\" sizi başvurunun Süreç bölümüne götürür; olay formu \"İşe alım uzmanı iletişime geçti\" seçili ve not alanı hazır olarak açılır.",
         "phone": "Telefonda kısayol yoktur: Başvurular'daki aramaya şirketin adını yazın. Bulunan başvuruların hepsi aynı şirketteyse, o şirketteki en son başvurunuzun aynı özeti listenin üstünde açılır. Hızlı bul yalnızca kendi başvurularınızda arar."
+      },
+      "reapply": {
+        "title": "Tekrar başvurma hatırlatması",
+        "body": "Reddedilen bir başvurunun sayfasında \"İleride tekrar başvurmak istersen hatırlatayım\" kutusu çıkar: 3 ay, 6 ay ya da 1 yıl sonrasını seçebilir veya \"Gerek yok\" diyebilirsiniz. Seçtiğiniz gün saat 09:00'da (hafta sonu ya da resmî tatile denk gelirse sonraki iş gününde) panelde \"Tekrar başvurma zamanı\" kartında görünür; varsa geçen seferki ret sebebini ve şirketin ilanlarına giden bir bağlantıyı gösterir. Oradan 3 ay sonrasına erteleyebilir ya da kapatabilirsiniz; ayarladığınız hatırlatmayı başvuru sayfasında \"Vazgeç\" ile iptal edebilirsiniz. Soru her ret için bir kez sorulur ve hatırlatmalara ara verdiğinizde bu kart da gizlenir."
       }
     },
     "board": {

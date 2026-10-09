@@ -951,7 +951,7 @@ internal sealed class AuthService(
                 {
                     a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.AppliedAt, a.CreatedAt, a.UpdatedAt,
                     a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice,
-                    a.InterviewAt, a.InterviewFormat, a.InterviewStatus
+                    a.InterviewAt, a.InterviewFormat, a.InterviewStatus, a.InterviewWith
                 })
             .ToListAsync(cancellationToken);
 
@@ -979,7 +979,7 @@ internal sealed class AuthService(
                     .Select(h => new StatusHistoryExportItem(h.FromStatus, h.ToStatus, h.ChangedAt, h.Note, h.Origin))
                     .ToList(),
                 a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice,
-                a.InterviewAt, a.InterviewFormat, a.InterviewStatus))
+                a.InterviewAt, a.InterviewFormat, a.InterviewStatus, a.InterviewWith))
             .ToList();
 
         var importBatches = await dbContext.ImportBatches

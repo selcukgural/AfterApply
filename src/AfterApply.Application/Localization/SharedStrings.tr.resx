@@ -747,6 +747,9 @@
   <data name="VALIDATION_INTERVIEW_RANGE" xml:space="preserve">
     <value>Görüşme tarihi en fazla bir ay önce ya da bir yıl sonra olabilir.</value>
   </data>
+  <data name="REAPPLY_NOT_REJECTED" xml:space="preserve">
+    <value>Tekrar başvuru hatırlatması yalnızca reddedilmiş bir başvuru için kurulabilir.</value>
+  </data>
   <data name="REMINDER_NOT_AN_INTERVIEW" xml:space="preserve">
     <value>Bu hatırlatıcı bir görüşmeyle ilgili değil.</value>
   </data>

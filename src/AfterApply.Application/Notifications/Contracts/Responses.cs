@@ -1,4 +1,5 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Domain.Notifications;
 
 namespace AfterApply.Application.Notifications.Contracts;
@@ -26,7 +27,24 @@ public sealed record ReminderResponse(
     // Set when the scan held this reminder back from a weekend or public holiday, with the morning
     // it was moved to — so the row can say "moved to today because of the feast" on that day.
     ReminderDeferral? DeferredFor = null,
-    DateTimeOffset? DeferredUntil = null);
+    DateTimeOffset? DeferredUntil = null,
+    // Who the user met, on InterviewHeld rows: the names the thank-you draft greets.
+    string? InterviewWith = null);
+
+/// <summary>A due "apply here again" reminder (ReminderType.Reapply): the rejected application,
+/// when it was rejected, the reason the company gave if one was recorded, and where the company
+/// lists its openings — whichever of its LinkedIn page and website is known; the slug for the
+/// company's page here when neither is.</summary>
+public sealed record ReapplyReminderResponse(
+    Guid Id,
+    Guid ApplicationId,
+    string CompanyName,
+    string JobTitle,
+    DateTimeOffset RejectedAt,
+    RejectionReasonCategory? RejectionReason,
+    string? CompanyLinkedInUrl,
+    string? CompanyWebsite,
+    string? CompanySlug);
 
 /// <summary>What an answer to "how did the interview go?" changed, so the row's undo can put exactly
 /// that back: the status move (both ends) and the reply date it recorded, each null when the answer
@@ -44,7 +62,8 @@ public sealed record UpcomingInterviewResponse(
     string JobTitle,
     ApplicationStatus Status,
     DateTimeOffset InterviewAt,
-    InterviewFormat Format);
+    InterviewFormat Format,
+    string? InterviewWith = null);
 
 /// <summary>How many reminders a bulk answer actually closed. Ids that were not the caller's, or
 /// were already closed, simply do not count — an id in a request body is a claim, not proof.</summary>

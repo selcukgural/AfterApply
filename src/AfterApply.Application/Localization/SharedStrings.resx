@@ -747,6 +747,9 @@
   <data name="VALIDATION_INTERVIEW_RANGE" xml:space="preserve">
     <value>The interview date can be at most a month in the past or a year ahead.</value>
   </data>
+  <data name="REAPPLY_NOT_REJECTED" xml:space="preserve">
+    <value>A reminder to apply again can only be set on a rejected application.</value>
+  </data>
   <data name="REMINDER_NOT_AN_INTERVIEW" xml:space="preserve">
     <value>This reminder is not about an interview.</value>
   </data>

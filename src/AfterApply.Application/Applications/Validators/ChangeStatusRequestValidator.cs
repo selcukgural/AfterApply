@@ -32,5 +32,6 @@ public sealed class ChangeStatusRequestValidator : AbstractValidator<ChangeStatu
             .When(x => !InterviewStages.Values.Contains(x.NewStatus))
             .WithMessage(_ => localizer["INTERVIEW_OUTSIDE_INTERVIEW_STAGE"]);
         RuleFor(x => x.InterviewFormat).IsInEnum();
+        RuleFor(x => x.InterviewWith).MaximumLength(Domain.Applications.Application.InterviewWithMaxLength);
     }
 }

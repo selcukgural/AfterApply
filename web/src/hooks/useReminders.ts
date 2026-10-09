@@ -149,3 +149,28 @@ export function useUndoInterviewAnswer() {
     onSuccess: invalidate,
   });
 }
+
+/** "Apply here again" reminders whose day has come — their own card, outside the paged list. */
+export function useReapplyReminders() {
+  return useQuery({
+    queryKey: [...remindersQueryKey, "reapply"],
+    queryFn: () => remindersApi.reapply(),
+    retry: (failureCount, error) => !(error instanceof ApiError && error.status === 404) && failureCount < 1,
+  });
+}
+
+/** Sets, moves, declines or cancels the "apply here again" reminder of a rejected application:
+ *  `months` null declines. The application page and the dashboard card both read the result. */
+export function useSetReapplyReminder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ applicationId, months }: { applicationId: string; months: 3 | 6 | 12 | null }) =>
+      months === null
+        ? applicationsApi.declineReapplyReminder(applicationId)
+        : applicationsApi.setReapplyReminder(applicationId, { months }),
+    onSuccess: (_, { applicationId }) => {
+      queryClient.invalidateQueries({ queryKey: remindersQueryKey });
+      queryClient.invalidateQueries({ queryKey: ["applications", "detail", applicationId] });
+    },
+  });
+}

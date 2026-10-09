@@ -134,7 +134,14 @@ public sealed record ApplicationDetailResponse(
     DateTimeOffset? CvDocumentUploadedAt = null,
     // The latest CV the user uploaded after both this application and the CV it was sent with —
     // the company has the older one. Only while the application is still open; null otherwise.
-    DateTimeOffset? NewerCvUploadedAt = null);
+    DateTimeOffset? NewerCvUploadedAt = null,
+    // Who the user is meeting at the current stage's interview; null with no interview.
+    string? InterviewWith = null,
+    // Only on a rejected application: when the "apply here again" reminder will show, while one is
+    // set, and whether the question has been answered at all (set, declined or cancelled) — the
+    // page asks it once per rejection.
+    DateTimeOffset? ReapplyRemindAt = null,
+    bool ReapplyDecided = false);
 
 public sealed record ExtensionApplicationResponse(
     ApplicationDetailResponse Application,
@@ -217,3 +224,7 @@ public sealed record StaleApplicationsSummaryResponse(int Count, int OldestDays,
 /// <summary>Returned (as a 409) when the number of applications matching a bulk operation's filter
 /// is no longer the number the user was shown. Nothing has been changed when this comes back.</summary>
 public sealed record BulkCountMismatch(int ExpectedCount, int ActualCount);
+
+/// <summary>Where the "apply here again" reminder stands after a change: the morning it will show,
+/// or null when declined or cancelled.</summary>
+public sealed record ReapplyReminderStateResponse(DateTimeOffset? RemindAt);
