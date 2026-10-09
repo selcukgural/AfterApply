@@ -58,7 +58,9 @@ public static class SiteTrafficNormalizer
             ["register_password_rejected"] = SiteTrafficEvent.RegisterPasswordRejected,
             ["register_social_started"] = SiteTrafficEvent.RegisterSocialStarted,
             ["register_social_completed"] = SiteTrafficEvent.RegisterSocialCompleted,
-            ["cta_hero_social_sign_in"] = SiteTrafficEvent.CtaHeroSocialSignIn
+            ["cta_hero_social_sign_in"] = SiteTrafficEvent.CtaHeroSocialSignIn,
+            ["tool_result_shown"] = SiteTrafficEvent.ToolResultShown,
+            ["cta_tool_sign_up"] = SiteTrafficEvent.CtaToolSignUp
         };
 
     /// <summary>

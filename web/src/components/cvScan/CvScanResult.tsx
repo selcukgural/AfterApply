@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { ShareRow } from "@/components/share/ShareRow";
+import { ToolSignUpLink } from "@/components/analytics/ToolSignUpLink";
 import { SITE_URL } from "@/lib/seo/routes";
 import { cvScanScorePath } from "@/lib/cvScan/path";
 import { formatScoreCard } from "@/lib/cvScan/scoreCard";
@@ -82,9 +83,7 @@ export function CvScanResult({ result, onReset }: { result: CvScanResponse; onRe
             report this page loses on close is the one /cv keeps next to the stored file. */}
         <p className="text-sm text-gray-600 dark:text-gray-400">{t("result.ctaTrack")}</p>
         <div className="flex flex-wrap items-center gap-3">
-          <Link href="/register" className={buttonClassName()}>
-            {t("result.ctaRegister")}
-          </Link>
+          <ToolSignUpLink className={buttonClassName()}>{t("result.ctaRegister")}</ToolSignUpLink>
           <span className="text-xs text-gray-500 dark:text-gray-400">{t("result.ctaTrackNote")}</span>
         </div>
       </section>

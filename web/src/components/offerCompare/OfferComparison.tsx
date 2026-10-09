@@ -7,6 +7,7 @@ import { emptyDraft, exampleDrafts, toOffer, type DraftField, type OfferDraft } 
 import { OfferForm } from "./OfferForm";
 import { OfferVerdict } from "./OfferVerdict";
 import { MonthlyTakeHome } from "./MonthlyTakeHome";
+import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 
 const LETTERS = ["A", "B", "C"] as const;
 const MAX_OFFERS = LETTERS.length;
@@ -33,8 +34,17 @@ export function OfferComparison() {
   const names = offers.map((offer, index) => offer.name.trim() || defaultName(LETTERS[index]));
   const current = Math.min(active, drafts.length - 1);
 
-  const update = (index: number, patch: Partial<OfferDraft>) =>
+  // The comparison has no submit: it answers as the visitor types. Its "result" is counted once
+  // per visit, on the first figure that is the visitor's own rather than the example's. Only the
+  // fact is reported — never a figure — so the promise above still holds.
+  const resultReported = useRef(false);
+  const update = (index: number, patch: Partial<OfferDraft>) => {
+    if (!resultReported.current) {
+      resultReported.current = true;
+      trackSiteTraffic("tool_result_shown");
+    }
     setDrafts((list) => list.map((draft, i) => (i === index ? { ...draft, ...patch } : draft)));
+  };
 
   const add = () => {
     if (drafts.length >= MAX_OFFERS) return;

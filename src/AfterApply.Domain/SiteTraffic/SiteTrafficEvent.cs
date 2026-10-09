@@ -57,5 +57,17 @@ public enum SiteTrafficEvent
     /// <summary>A LinkedIn, Google or GitHub button on the landing page's sign-up card was clicked
     /// (2026-10-02). The card put the providers on the first screen; this says how many of the
     /// social sign-ups started there rather than on /register.</summary>
-    CtaHeroSocialSignIn
+    CtaHeroSocialSignIn,
+
+    /// <summary>A free tool other than the CV scan gave the visitor its result (2026-10-09): the
+    /// benchmark answer came back, the offer comparison got its first figure that is not the
+    /// example, a "no reply" report on a company page was sent. The path says which tool. The CV
+    /// scan keeps CvScanCompleted so its history stays one series.</summary>
+    ToolResultShown,
+
+    /// <summary>A sign-up button inside a free tool was clicked — the CV scan or benchmark result,
+    /// the response-rate table, the "no reply" report's thank-you (2026-10-09). The path says
+    /// which tool. Answers "does anyone who got a result reach for an account", which the tool's
+    /// own result count and the site-wide sign-up count cannot answer between them.</summary>
+    CtaToolSignUp
 }

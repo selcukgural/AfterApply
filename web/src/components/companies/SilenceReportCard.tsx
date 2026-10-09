@@ -4,6 +4,8 @@ import { useId, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { ToolSignUpLink } from "@/components/analytics/ToolSignUpLink";
+import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { silenceReportsApi } from "@/lib/api/silenceReports";
 import { ApiError } from "@/lib/api/httpClient";
@@ -47,7 +49,10 @@ export function SilenceReportCard({ companySlug }: { companySlug: string }) {
 
   const submit = useMutation({
     mutationFn: () => silenceReportsApi.submit(companySlug, buildSilenceReportRequest(draft, locale, window.location.search)),
-    onSuccess: () => setStep("sent"),
+    onSuccess: () => {
+      setStep("sent");
+      trackSiteTraffic("tool_result_shown");
+    },
     onError: (err) => setError(err instanceof ApiError ? err.message : t("error")),
   });
 
@@ -153,9 +158,9 @@ export function SilenceReportCard({ companySlug }: { companySlug: string }) {
       {step === "sent" && (
         <p role="status" className="border-t border-gray-100 pt-4 text-sm leading-relaxed text-gray-600 dark:border-gray-800 dark:text-gray-400">
           {t("sent")}{" "}
-          <Link href="/applications" className="font-medium text-gray-900 hover:underline dark:text-gray-100">
+          <ToolSignUpLink href="/applications" className="font-medium text-gray-900 hover:underline dark:text-gray-100">
             {t("sentLink")}
-          </Link>
+          </ToolSignUpLink>
         </p>
       )}
     </section>
