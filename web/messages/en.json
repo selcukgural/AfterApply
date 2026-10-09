@@ -2498,7 +2498,7 @@
         },
         "step2": {
           "title": "Start typing the company name",
-          "body": "Companies you've added before are suggested as autocomplete; for a new company, just type it as-is."
+          "body": "Companies you've added before are suggested as autocomplete; for a new company, just type it as-is. If you pick the company from the suggestions and you've applied there before, a \"Your history with this company\" box appears in the form: the job title, month and status of your three most recent applications there, with all of them one click away. It isn't a warning; applying again is fine. The box only appears when creating a new application and only shows your own applications."
         },
         "step3": {
           "title": "Enter the job title, job URL, location, and employment type",

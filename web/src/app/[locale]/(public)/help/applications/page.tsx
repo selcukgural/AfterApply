@@ -40,7 +40,7 @@ export default async function ApplicationsHelpPage({ params }: PageProps<"/[loca
         <p className="max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">{t("intro")}</p>
       </div>
 
-      <section className="flex flex-col gap-4">
+      <section id="create" className="flex scroll-mt-20 flex-col gap-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("create.title")}</h2>
         <StepList steps={createSteps} />
         <Screenshot src="/help/screenshots/application-create.png" alt={t("create.title")} />

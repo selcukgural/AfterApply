@@ -2498,7 +2498,7 @@
         },
         "step2": {
           "title": "Şirket adını yazmaya başlayın",
-          "body": "Daha önce eklediğiniz şirketler otomatik tamamlama olarak önerilir; yeni bir şirketse olduğu gibi yazmanız yeterli."
+          "body": "Daha önce eklediğiniz şirketler otomatik tamamlama olarak önerilir; yeni bir şirketse olduğu gibi yazmanız yeterli. Şirketi önerilerden seçtiğinizde ve o şirkete daha önce başvurduysanız, formda \"Bu şirketteki geçmişin\" kutusu görünür: en yeni üç başvurunuzun pozisyonu, ayı ve durumu; tamamı tek tıkla listelenir. Bu bir uyarı değildir, tekrar başvurmak sorun değil. Kutu yalnızca yeni başvuru oluştururken çıkar ve yalnızca kendi başvurularınızı gösterir."
         },
         "step3": {
           "title": "Pozisyon, ilan linki, konum ve istihdam türünü girin",
