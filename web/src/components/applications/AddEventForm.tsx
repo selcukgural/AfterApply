@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ApplicationEventType } from "@/types/api";
 import { MANUAL_APPLICATION_EVENT_TYPES } from "@/lib/constants/applicationEventType";
@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/Button";
 interface AddEventFormProps {
   onAddEvent: (type: ApplicationEventType, occurredAt: string | null, note: string | null) => Promise<void>;
   isSubmitting: boolean;
+  /** Arriving through the quick card's "add a call note" (`?open=note`): open, in view, with the
+   *  note field focused — the call may still be going on. */
+  openOnArrival?: boolean;
 }
 
 /**
@@ -18,10 +21,15 @@ interface AddEventFormProps {
  * Collapsed until asked for, the same way StatusChangeSelect is: the detail page is for reading
  * first, and a form permanently open at the bottom of it reads as work waiting to be done.
  */
-export function AddEventForm({ onAddEvent, isSubmitting }: AddEventFormProps) {
+export function AddEventForm({ onAddEvent, isSubmitting, openOnArrival = false }: AddEventFormProps) {
   const t = useTranslations("applications.addEvent");
   const tEventType = useTranslations("applicationEventType");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(openOnArrival);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (openOnArrival) formRef.current?.scrollIntoView({ block: "center" });
+  }, [openOnArrival]);
   const [type, setType] = useState<ApplicationEventType>(MANUAL_APPLICATION_EVENT_TYPES[0]);
   const [occurredAt, setOccurredAt] = useState("");
   const [note, setNote] = useState("");
@@ -49,7 +57,7 @@ export function AddEventForm({ onAddEvent, isSubmitting }: AddEventFormProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-800">
+    <div ref={formRef} className="flex flex-col gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-800">
       <Select value={type} onChange={(e) => setType(e.target.value as ApplicationEventType)} aria-label={t("type")}>
         {MANUAL_APPLICATION_EVENT_TYPES.map((eventType) => (
           <option key={eventType} value={eventType}>
@@ -63,7 +71,12 @@ export function AddEventForm({ onAddEvent, isSubmitting }: AddEventFormProps) {
         onChange={(e) => setOccurredAt(e.target.value)}
         aria-label={t("occurredAt")}
       />
-      <Input placeholder={t("notePlaceholder")} value={note} onChange={(e) => setNote(e.target.value)} />
+      <Input
+        placeholder={t("notePlaceholder")}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        autoFocus={openOnArrival}
+      />
       <p className="text-xs text-gray-500 dark:text-gray-400">{t("occurredAtHint")}</p>
       <div className="flex gap-2">
         <Button onClick={handleConfirm} disabled={isSubmitting}>

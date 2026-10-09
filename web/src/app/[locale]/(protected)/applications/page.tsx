@@ -38,6 +38,8 @@ import {
   parseView,
 } from "@/lib/applications/listView";
 import { ApplicationFilters } from "@/components/applications/ApplicationFilters";
+import { QuickCard } from "@/components/quickFind/QuickCard";
+import { quickCardTarget } from "@/lib/quickFind/quickFind";
 import { ApplicationTable } from "@/components/applications/ApplicationTable";
 import { ApplicationViewToggle } from "@/components/applications/ApplicationViewToggle";
 import { BulkActionBar, BulkSelectAllNotice } from "@/components/applications/BulkActionBar";
@@ -180,6 +182,7 @@ export default function ApplicationsListPage() {
     }
     updateParams({ search: link });
   };
+  const quickCardId = quickCardTarget(search, items);
   const hasActiveFilter = search !== "" || status !== "" || filter.companyId !== "";
   const clearFilters = hasActiveFilter
     ? () => updateParams({ search: null, status: null, companyId: null })
@@ -386,6 +389,15 @@ export default function ApplicationsListPage() {
             setUndoError(null);
           }}
         />
+      )}
+
+      {/* A search that lands on one company is usually "someone from X is calling" — on a phone,
+          that company's latest application opens as a card above the rows (canvas "İnce
+          dokunuşlar — Paket 5", 2B). Wider screens have Ctrl+K for the same card. */}
+      {quickCardId && (
+        <div className="md:hidden">
+          <QuickCard applicationId={quickCardId} />
+        </div>
       )}
 
       {isLoading || !hasData ? (

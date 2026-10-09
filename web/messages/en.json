@@ -844,7 +844,8 @@
       "descending": "Descending",
       "ascending": "Ascending",
       "sortLastActivity": "Last Activity",
-      "sortApplicationCount": "Application Count"
+      "sortApplicationCount": "Application Count",
+      "quickFindHint": "Quick find ({shortcut})"
     },
     "table": {
       "empty": "No applications found.",
@@ -901,6 +902,11 @@
         "title": "Your history with this company",
         "reassure": "Applying again is fine — just so you know.",
         "seeAll": "See all ({count})"
+      },
+      "savedPosting": {
+        "text": "You already saved this posting: <strong>{title}</strong>",
+        "open": "Open the application",
+        "reassure": "If this is a new application, carry on."
       }
     },
     "new": {
@@ -1056,7 +1062,9 @@
         "body": "Before deciding, it helps to turn the gross offer into net pay and put it next to any others you have.",
         "compare": "Compare offers",
         "others": "{count, plural, one {You have # other application in interviews} other {You have # other applications in interviews}} — telling them about the offer can speed things up."
-      }
+      },
+      "cvVersion": "{date} version",
+      "newerCv": "You uploaded a newer CV after this application ({date}); the company has this version."
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -2502,7 +2510,7 @@
         },
         "step3": {
           "title": "Enter the job title, job URL, location, and employment type",
-          "body": "The applied date defaults to today, but you can change it."
+          "body": "The applied date defaults to today, but you can change it. When you paste the posting link and that posting is already in your list, a \"You already saved this posting\" note appears under the field: the saved application's role, when you applied, its status, and a link that opens it. The link is recognised even with the tracking parameters your address bar adds. It does not stop you: if you really are applying again to a reposted job, carry on and save."
         },
         "step4": {
           "title": "Optionally add a source, a CV and notes, then save",
@@ -2515,7 +2523,7 @@
       },
       "detail": {
         "title": "Application detail",
-        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any), the CV you recorded it with and your notes, with the Timeline and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge. An application still in progress also has a \"Promised reply by\" cell: the date the company gave, the stage it was given at, and how many days are left or have passed. Depending on the application, an \"A quick reminder\" box may appear too; when and what it shows is described in its own section below."
+        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any), the CV you recorded it with (and which day's upload it was) and your notes, with the Timeline and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge. An application still in progress also has a \"Promised reply by\" cell: the date the company gave, the stage it was given at, and how many days are left or have passed. Depending on the application, an \"A quick reminder\" box may appear too; when and what it shows is described in its own section below. If you uploaded a newer CV after an application that is still in progress, a note under the CV row says so: the company has the version you sent with that application."
       },
       "contact": {
         "title": "HR contact and company links",
@@ -2610,6 +2618,11 @@
           "title": "The posting's age and your earlier application",
           "body": "When the posting's publish date is known, the box says how old the posting already was on the day you applied. If you applied to the same company before, that application's position, month and status appear with a link to it."
         }
+      },
+      "quickFind": {
+        "title": "Quick find: when someone calls",
+        "body": "When a company calls out of the blue, you have a few seconds to remember which application it is. On any page while signed in, press Ctrl K (⌘K on a Mac), or click the shortcut button at the right of the search box on Applications, and type the company's or role's name. A summary of the matching application opens: role, status, when you applied, the CV you sent and its version, the HR contact, your note, a short passage from the posting, and your other applications at the same company. With more than one result, move between them with the arrow keys and press Enter to open the application. \"Add a call note\" takes you to the application's Timeline with the event form open, \"Recruiter got in touch\" selected and the note field ready.",
+        "phone": "Phones have no shortcut: type the company's name into the search on Applications. If every application found is at the same company, the same summary of your latest application there opens above the list. Quick find only ever searches your own applications."
       }
     },
     "board": {
@@ -7717,6 +7730,32 @@
           }
         }
       }
+    }
+  },
+  "quickFind": {
+    "title": "Quick find",
+    "placeholder": "Search a company or role",
+    "hint": "Type the calling company's name; the application's summary opens here.",
+    "searching": "Searching…",
+    "empty": "No application matches “{search}”.",
+    "keys": {
+      "move": "select",
+      "open": "open",
+      "anywhere": "{shortcut} on every page"
+    },
+    "card": {
+      "label": "Summary of the {company} application",
+      "applied": "You applied",
+      "cv": "CV you sent",
+      "cvVersion": "{date} version",
+      "hr": "HR contact",
+      "copyHrEmail": "Copy the HR email address",
+      "note": "Your note",
+      "fromPosting": "From the posting:",
+      "readPosting": "Whole posting",
+      "open": "Open the application",
+      "addNote": "Add a call note",
+      "others": "Other applications here"
     }
   }
 }

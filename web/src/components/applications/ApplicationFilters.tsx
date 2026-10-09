@@ -7,6 +7,8 @@ import type { ListView } from "@/lib/applications/listView";
 import { COMPANY_SORT_OPTIONS, FLAT_SORT_OPTIONS } from "@/lib/applications/listView";
 import { APPLICATION_STATUSES } from "@/lib/constants/applicationStatus";
 import { looksLikeJobLink } from "@/lib/applications/pastedLink";
+import { QUICK_FIND_OPEN_EVENT } from "@/lib/quickFind/quickFind";
+import { useQuickFindShortcutLabel } from "@/hooks/useShortcutLabel";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 
@@ -49,6 +51,7 @@ export function ApplicationFilters({
 }: ApplicationFiltersProps) {
   const t = useTranslations("applications.filters");
   const tStatus = useTranslations("status");
+  const shortcut = useQuickFindShortcutLabel();
   const SORT_LABELS: Record<string, string> = {
     AppliedAt: t("sortAppliedAt"),
     UpdatedAt: t("sortUpdatedAt"),
@@ -87,8 +90,9 @@ export function ApplicationFilters({
   return (
     <div className="flex flex-wrap items-end gap-3">
       {leading}
-      <div className="min-w-48 flex-1">
+      <div className="relative min-w-48 flex-1">
         <Input
+          className="md:pr-12"
           placeholder={t("searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -102,6 +106,19 @@ export function ApplicationFilters({
             onLinkPasted(link);
           }}
         />
+        {/* Where people already look for an application: the one place that tells them the quick
+            find exists. Keyboard-only users reach it with the shortcut it names, so it stays out
+            of the tab order; a phone has no shortcut, and gets the search card instead. */}
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => window.dispatchEvent(new Event(QUICK_FIND_OPEN_EVENT))}
+          title={t("quickFindHint", { shortcut })}
+          aria-label={t("quickFindHint", { shortcut })}
+          className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[11px] text-gray-500 hover:text-gray-900 md:block dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100"
+        >
+          {shortcut}
+        </button>
       </div>
       {/* Each select is sized by its wrapper, not by a class on itself: Select hardcodes `w-full`,
           and a `w-auto` passed alongside it loses or wins purely on stylesheet order — the same

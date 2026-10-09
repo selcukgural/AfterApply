@@ -95,6 +95,33 @@ public class ApplicationListPaginationTests(ApiHost<DefaultProfile> host) : ICla
         page.Items.Single().CompanyName.ShouldBe("Linked Co");
     }
 
+    [Theory]
+    [InlineData("https://www.linkedin.com/jobs/view/40123/")]
+    [InlineData("https://www.kariyer.net/is-ilani/acme-yazilim-12")]
+    public async Task A_Pasted_Posting_Link_Does_Not_Find_A_Posting_Whose_Address_Merely_Starts_With_It(string pasted)
+    {
+        await CreateApplicationWithUrlAsync("Longer Id Co", "https://www.linkedin.com/jobs/view/4012345678/");
+        await CreateApplicationWithUrlAsync("Longer Slug Co", "https://www.kariyer.net/is-ilani/acme-yazilim-123456");
+
+        var page = await SearchAsync(_client, pasted);
+
+        page.TotalCount.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData("https://www.kariyer.net/is-ilani/acme-yazilim-123456")]
+    [InlineData("https://www.kariyer.net/is-ilani/acme-yazilim-123456?src=share")]
+    [InlineData("https://www.kariyer.net/is-ilani/acme-yazilim-123456#apply")]
+    [InlineData("https://www.kariyer.net/is-ilani/acme-yazilim-123456/basvur")]
+    public async Task A_Pasted_Posting_Link_Finds_The_Saved_Address_Whatever_Follows_Its_Path(string stored)
+    {
+        await CreateApplicationWithUrlAsync("Boundary Co", stored);
+
+        var page = await SearchAsync(_client, "kariyer.net/is-ilani/acme-yazilim-123456");
+
+        page.TotalCount.ShouldBe(1);
+    }
+
     [Fact]
     public async Task A_Pasted_Posting_Link_Never_Finds_Another_Users_Application()
     {

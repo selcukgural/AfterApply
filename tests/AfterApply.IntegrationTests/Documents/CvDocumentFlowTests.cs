@@ -6,6 +6,7 @@ using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Documents.Contracts;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Infrastructure.Persistence;
@@ -344,6 +345,56 @@ public class CvDocumentFlowTests(ApiHost<LocalStorageProfile> host) : IClassFixt
 
         var list = await client.GetFromJsonAsync<CvDocumentListResponse>("/api/cv-documents", JsonOptions);
         list!.Items.Single().UsedByApplicationCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task An_Open_Application_Says_When_A_Newer_Cv_Was_Uploaded_After_It()
+    {
+        var client = await AuthenticatedClientAsync("cv.application.newer@example.com");
+
+        var sent = await UploadAsync(client, PdfBytes, "cv.pdf");
+        var createResponse = await client.PostAsJsonAsync("/api/applications",
+            new CreateApplicationRequest("Version Co", "Backend Engineer", null, null,
+                EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.Manual, null,
+                CvDocumentId: sent.Id),
+            JsonOptions);
+        var application = await createResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        application!.CvDocumentUploadedAt.ShouldNotBeNull().ShouldBe(sent.UploadedAt, TimeSpan.FromMilliseconds(1));
+        application.NewerCvUploadedAt.ShouldBeNull();
+
+        var newer = await UploadAsync(client, PdfBytes, "cv.pdf");
+        var reloaded = await client.GetFromJsonAsync<ApplicationDetailResponse>(
+            $"/api/applications/{application.Id}", JsonOptions);
+
+        reloaded!.NewerCvUploadedAt.ShouldNotBeNull().ShouldBe(newer.UploadedAt, TimeSpan.FromMilliseconds(1));
+
+        // Once the process is over it no longer matters which version the company holds.
+        (await client.PostAsJsonAsync($"/api/applications/{application.Id}/status",
+            new ChangeStatusRequest(ApplicationStatus.Rejected, null, null), JsonOptions)).EnsureSuccessStatusCode();
+        var rejected = await client.GetFromJsonAsync<ApplicationDetailResponse>(
+            $"/api/applications/{application.Id}", JsonOptions);
+
+        rejected!.NewerCvUploadedAt.ShouldBeNull();
+        rejected.CvDocumentUploadedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task A_Cv_Uploaded_Before_The_Application_Is_Not_Newer_Even_If_Another_One_Was_Sent()
+    {
+        var client = await AuthenticatedClientAsync("cv.application.older@example.com");
+
+        var sent = await UploadAsync(client, PdfBytes, "chosen.pdf");
+        await UploadAsync(client, PdfBytes, "not-chosen.pdf");
+
+        var createResponse = await client.PostAsJsonAsync("/api/applications",
+            new CreateApplicationRequest("Version Co", "Backend Engineer", null, null,
+                EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.Manual, null,
+                CvDocumentId: sent.Id),
+            JsonOptions);
+        var application = await createResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        application!.NewerCvUploadedAt.ShouldBeNull();
     }
 
     [Fact]

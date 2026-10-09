@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Combobox, type ComboboxOption } from "@/components/ui/Combobox";
 import { CompanyHistory } from "@/components/applications/CompanyHistory";
+import { SavedPostingNotice } from "@/components/applications/SavedPostingNotice";
 import { HrContactFields, type HrContactValues } from "@/components/ui/HrContactFields";
 import { companiesApi } from "@/lib/api/companies";
 import { CvSelectField } from "@/components/cv/CvSelectField";
@@ -121,6 +122,7 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
       <FormField label={t("jobUrl")} htmlFor="jobUrl" error={errors.jobUrl}>
         <Input id="jobUrl" value={values.jobUrl} onChange={update("jobUrl")} />
       </FormField>
+      {mode === "create" && <SavedPostingNotice jobUrl={values.jobUrl} />}
       <FormField label={t("location")} htmlFor="location" error={errors.location}>
         <Input id="location" value={values.location} onChange={update("location")} />
       </FormField>
