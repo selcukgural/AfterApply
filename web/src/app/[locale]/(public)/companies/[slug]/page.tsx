@@ -6,7 +6,13 @@ import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { SITE_URL } from "@/lib/seo/routes";
 import { safeExternalUrl } from "@/lib/url/externalLink";
 import { ShareRow } from "@/components/share/ShareRow";
-import { fetchApprovedReviews, fetchCompanyBySlug } from "@/lib/companies/publicApi.server";
+import {
+  fetchApprovedReviews,
+  fetchCandidateExperiences,
+  fetchCompanyBySlug,
+  fetchCompanyTabFeatures,
+} from "@/lib/companies/publicApi.server";
+import { companyPageLead, experiencesPageMeta, isCompanyPageIndexable, type RootTranslate } from "@/lib/companies/companyPageContent";
 import { ReviewSummaryPanel } from "@/components/companyReviews/ReviewSummaryPanel";
 import { CompanyReviewsSection } from "@/components/companyReviews/CompanyReviewsSection";
 import { CompanyPageTabs } from "@/components/companies/CompanyPageTabs";
@@ -21,6 +27,10 @@ import { SilenceReportCard } from "@/components/companies/SilenceReportCard";
  * review" call to action needs somewhere to live) but tells crawlers not to index it — a page
  * with a name and nothing else is the thin content that gets a whole site marked down. A public
  * candidate experience counts as content for that purpose; salaries, behind sign-in, do not.
+ *
+ * A company known only for candidate experiences leads with them (2026-10-14): that tab opens
+ * first, its entries are fetched here so they are in the HTML, and the title and description say
+ * "hiring process experiences" instead of promising reviews the page does not have.
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]/companies/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
@@ -32,19 +42,35 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/companie
 
   const t = await getTranslations("companies.page");
   const tPages = await getTranslations("metadata.pages");
+  const leadsWithExperiences = companyPageLead(company) === "experiences";
+  const tRoot = await getTranslations();
+  // The snippet facts pick their message keys at run time; the catalogue's key types cannot follow.
+  const translate: RootTranslate = (key, values) => tRoot(key as never, values as never);
+  const experiences = leadsWithExperiences ? await fetchCandidateExperiences(slug, locale) : null;
+  const text = leadsWithExperiences
+    ? experiencesPageMeta(company, experiences?.items[0] ?? null, translate, locale)
+    : {
+        title: t("metaTitle", { company: company.name }),
+        description: t("metaDescription", { company: company.name, count: company.summary.approvedCount }),
+      };
   return buildMetadata({
     locale,
     path: `/companies/${slug}`,
-    title: t("metaTitle", { company: company.name }),
-    description: t("metaDescription", { company: company.name, count: company.summary.approvedCount }),
-    index: company.summary.approvedCount > 0 || (company.candidateExperienceCount ?? 0) > 0,
+    title: text.title,
+    description: text.description,
+    index: isCompanyPageIndexable(company),
     kicker: tPages("companies.title"),
   });
 }
 
 export default async function CompanyPage({ params }: PageProps<"/[locale]/companies/[slug]">) {
   const { locale, slug } = await params;
-  const [company, reviews] = await Promise.all([fetchCompanyBySlug(slug, locale), fetchApprovedReviews(slug, locale)]);
+  const [company, reviews, experiences, features] = await Promise.all([
+    fetchCompanyBySlug(slug, locale),
+    fetchApprovedReviews(slug, locale),
+    fetchCandidateExperiences(slug, locale),
+    fetchCompanyTabFeatures(),
+  ]);
   if (!company || !reviews) {
     notFound();
   }
@@ -81,11 +107,13 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
         )}
       </header>
 
-      {/* The reviews half is still rendered here with server data; the tabs only decide which
-          half is on screen. The salaries and experiences halves fetch on the client and are never
-          in the cached page. */}
+      {/* The reviews and experiences halves are rendered here with server data; the tabs decide
+          which half is on screen and which one opens first. The salaries half fetches on the
+          client, behind sign-in. */}
       <CompanyPageTabs
         companyId={company.id}
+        lead={companyPageLead(company)}
+        serverFeatures={features}
         reviewCount={company.summary.approvedCount}
         salaryCount={company.salaryCount ?? 0}
         experienceCount={company.candidateExperienceCount ?? 0}
@@ -96,7 +124,7 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
           </>
         }
         salaries={<CompanySalariesPanel company={company} />}
-        experiences={<CandidateExperiencesPanel company={company} />}
+        experiences={<CandidateExperiencesPanel company={company} initialPage={experiences} />}
         intelligence={<CompanyIntelligencePanel company={company} />}
       />
 

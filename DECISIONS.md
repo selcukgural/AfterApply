@@ -10785,3 +10785,25 @@ yanıt oranları ve "Dönüş alamadım" bildirimi için ne sonuç ne tıklama s
   parolanın reddi, araç sonucu, paylaş), sayfa, dil, referrer alan adı; adımın içeriğinin (puan, rakam, cevap,
   e-posta) gönderilmediği ayrı paragrafta. "İşlem kayıtları" istisnası adım bildirimlerini de kapsıyor.
   `browserStorage.test.ts` olay listesini donduruyor: yeni bir olay iki metin güncellenmeden eklenemez.
+
+## Yalnız aday deneyimi olan şirket sayfası deneyimle açılır, deneyimler HTML'de — DECIDED (2026-10-14)
+
+**Bağlam:** Search Console 2026-10-03'ten beri günde 1–6 gösterim (önce 40–61); sayfalar dizinde ama
+gösterim almıyor. Sitemap'teki 45 şirketin 34'ü yalnız 1 aday deneyimiyle indekslenebilirdi, ama deneyimler
+sekmeye tıklanınca tarayıcıda yükleniyordu: Google'ın okuduğu HTML ~116 kelimelik, 34 sayfada aynı şablondu
+ve üç yerde "henüz değerlendirme yok" diyordu (meta açıklaması dahil). Tuval:
+https://claude.ai/artifact/R8aa57o3Bf4uA9XxVjiCWF — kullanıcı onayladı.
+
+- **İndeks kuralı değişmedi (kullanıcı kararı):** 1 değerlendirme ya da 1 aday deneyimi yeter; eşik
+  yükseltmek önerildi, reddedildi. Sitemap zaten dinamik, şirket eşiği geçince kendiliğinden girer.
+- **Değerlendirmesi olmayan, deneyimi olan şirket** (`companyPageLead`): "Aday deneyimi" sekmesi önde ve açık
+  gelir; ilk sayfa sunucuda çekilir (`fetchCandidateExperiences`, hata/bayrak kapalı → null, istemci eskisi gibi
+  çeker), panel `initialData` ile HTML'de render olur. Boş değerlendirme yarısı yalnız açılınca render edilir.
+  `?tab=reviews` çalışmaya devam eder.
+- **Başlık/açıklama:** "{şirket} mülakat ve işe alım süreci deneyimleri"; açıklama en yeni deneyimin kartta
+  zaten görünen bilgileri (süre, aşama, sonuç, genel puan). Değerlendirmesi olan şirkette hiçbir şey değişmedi.
+- **Sekme bayrakları sunucudan:** `fetchCompanyTabFeatures` (`/api/config`, 1 dk revalidate); tarayıcı kendi
+  config'ini okuyana kadar o kullanılır, böylece sekme satırı HTML'de var.
+- Alt bilgideki değerlendirme uyarısı metni değişmedi. Maaş sayfalarına dokunulmadı (2026-10-09 kararı).
+- **Ölçüm:** 2026-10-25 Search Console okuması; asıl karar ~4 hafta sonra (spam güncellemesi kaynaklı düşüş
+  genelde bir sonraki güncellemeye kadar toparlanmaz).

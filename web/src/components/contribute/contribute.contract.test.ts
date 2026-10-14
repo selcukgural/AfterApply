@@ -56,8 +56,21 @@ describe("the company page's salary tab", () => {
     const page = read("app/[locale]/(public)/companies/[slug]/page.tsx");
     expect(page).toContain("<CompanyPageTabs");
     expect(page).toContain("<CompanySalariesPanel company={company} />");
-    expect(page).toContain("<CandidateExperiencesPanel company={company} />");
+    expect(page).toContain("<CandidateExperiencesPanel company={company} initialPage={experiences} />");
     expect(page).toContain("<CompanyReviewsSection company={company} initialReviews={reviews} />");
+  });
+
+  it("puts a company's candidate experiences in the HTML and opens on them when it has no review", () => {
+    // 2026-10-14: the experiences used to load only on a click, so a crawler read "no reviews yet".
+    const page = read("app/[locale]/(public)/companies/[slug]/page.tsx");
+    expect(page).toContain("fetchCandidateExperiences(slug, locale)");
+    expect(page).toContain("lead={companyPageLead(company)}");
+    expect(page).toContain("serverFeatures={features}");
+    const tabs = read("components/companies/CompanyPageTabs.tsx");
+    expect(tabs).toContain(": lead,");
+    expect(tabs).toContain('reviewCount > 0 || active === "reviews" ? reviews : null');
+    const panel = read("components/candidateExperiences/CandidateExperiencesPanel.tsx");
+    expect(panel).toContain("initialData: page === 1 && initialPage ? initialPage : undefined");
   });
 
   it("fetches only for a signed-in reader and sends a visitor to sign in and back", () => {
@@ -93,7 +106,9 @@ describe("the company page's candidate-experience tab", () => {
   it("is public: fetched for anyone, no sample rows, a visitor is only sent to sign in to share", () => {
     const panel = read("components/candidateExperiences/CandidateExperiencesPanel.tsx");
     expect(panel).not.toContain("enabled: isAuthenticated,\n    queryFn: () => candidateExperiencesApi.list");
-    expect(panel).toContain("queryFn: () => candidateExperiencesApi.list(company.slug, page),\n  });");
+    expect(panel).toContain(
+      "queryFn: () => candidateExperiencesApi.list(company.slug, page),\n    initialData: page === 1 && initialPage ? initialPage : undefined,\n  });",
+    );
     expect(panel).not.toContain("SAMPLE_ROWS");
     expect(panel).toContain("/login?next=");
     expect(panel).toContain("?tab=experiences");
