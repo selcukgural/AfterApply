@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { CompanyPublicResponse } from "@/types/api";
+import type { CandidateExperiencePage, CompanyPublicResponse } from "@/types/api";
 import { candidateExperiencesApi } from "@/lib/api/candidateExperiences";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { contributeHref } from "@/lib/contribute/contributeState";
@@ -20,9 +20,16 @@ import { ProofNote } from "@/components/contributions/ProofLabel";
  * The candidate-experience tab of a company page. Public, like the reviews: the list is fetched
  * for anyone (the endpoint is anonymous), a signed-in reader additionally sees their own entry
  * and a "share" button, and a visitor is sent to sign in and back to this tab when they want to
- * add theirs. Not in the cached page — the reviews tab is the server-rendered half.
+ * add theirs. `initialPage` is the first page as the server read it (2026-10-14), so the entries
+ * are in the HTML when this tab opens first; null → fetched here, as before.
  */
-export function CandidateExperiencesPanel({ company }: { company: CompanyPublicResponse }) {
+export function CandidateExperiencesPanel({
+  company,
+  initialPage = null,
+}: {
+  company: CompanyPublicResponse;
+  initialPage?: CandidateExperiencePage | null;
+}) {
   const t = useTranslations("candidateExperiences.panel");
   const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
@@ -30,6 +37,7 @@ export function CandidateExperiencesPanel({ company }: { company: CompanyPublicR
   const listQuery = useQuery({
     queryKey: ["companies", company.slug, "experiences", { page }],
     queryFn: () => candidateExperiencesApi.list(company.slug, page),
+    initialData: page === 1 && initialPage ? initialPage : undefined,
   });
   const viewerQuery = useQuery({
     queryKey: ["companies", company.id, "experienceViewer"],

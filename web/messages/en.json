@@ -4372,6 +4372,10 @@
     "page": {
       "metaTitle": "{company} employee reviews and salaries",
       "metaDescription": "{count, plural, =0 {No published reviews of {company} yet — be the first. Salaries shared by employees are visible once you sign in.} =1 {1 anonymous employee review of {company}, a score you can check, and anonymous salary information by occupation once you sign in.} other {# anonymous employee reviews of {company}, a score you can check, and anonymous salary information by occupation once you sign in.}}",
+      "metaTitleExperiences": "{company} interview and hiring process experiences",
+      "metaDescriptionExperiences": "{company}: {count, plural, =1 {1 candidate experience} other {# candidate experiences}}. Latest process shared: {facts}. Anonymous and structured.",
+      "metaDescriptionExperiencesGeneric": "{company}: {count, plural, =1 {1 candidate experience} other {# candidate experiences}} — process length, number of stages, outcome and rating. Anonymous and structured.",
+      "metaRating": "overall {value}/5",
       "breadcrumbLabel": "Breadcrumb",
       "allCompanies": "← All companies",
       "subtitle": "Anonymous, structured reviews, salary information and candidate experiences from people who worked or interviewed here.",

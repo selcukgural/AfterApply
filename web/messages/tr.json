@@ -4372,6 +4372,10 @@
     "page": {
       "metaTitle": "{company} çalışan yorumları, değerlendirmeleri ve maaşları",
       "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol. Çalışanların paylaştığı maaşlar giriş yapınca görünür.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.} other {{company} hakkında # anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.}}",
+      "metaTitleExperiences": "{company} mülakat ve işe alım süreci deneyimleri",
+      "metaDescriptionExperiences": "{company}: {count, plural, =1 {1 aday deneyimi} other {# aday deneyimi}}. Son paylaşılan süreç: {facts}. Anonim ve yapılandırılmış.",
+      "metaDescriptionExperiencesGeneric": "{company}: {count, plural, =1 {1 aday deneyimi} other {# aday deneyimi}} — süreç süresi, aşama sayısı, sonuç ve puan. Anonim ve yapılandırılmış.",
+      "metaRating": "genel puan {value}/5",
       "breadcrumbLabel": "Gezinti",
       "allCompanies": "← Tüm şirketler",
       "subtitle": "Burada çalışmış ve buraya başvurmuş insanlardan anonim, yapılandırılmış değerlendirmeler, maaş bilgileri ve aday deneyimleri.",

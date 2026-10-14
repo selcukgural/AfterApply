@@ -1,7 +1,11 @@
 // Server-side only by convention (called from server components and the sitemap). The one secret a
 // fetch carries comes from renderHeaders, which reads it from a server-only environment variable.
+import { cache } from "react";
 import { renderHeaders } from "@/lib/api/renderHeaders.server";
+import type { CompanyTabFeatures } from "@/lib/companies/companyPageContent";
 import type {
+  CandidateExperiencePage,
+  ClientConfigResponse,
   CompanyPublicResponse,
   CompanyReviewPublic,
   CompanyReviewsConfig,
@@ -58,6 +62,21 @@ export function fetchApprovedReviews(slug: string, locale: string): Promise<Page
   );
 }
 
+/**
+ * The first page of a company's candidate experiences, newest first, so a company known for them
+ * has them in its HTML (2026-10-14: the tab used to fetch them in the browser only, and a crawler
+ * read "no reviews yet" on a page that had an experience). Null when the feature is off (the API
+ * answers 404) or the API failed — the tab then fetches on the client as before, the page itself
+ * never fails over it. `cache` lets the metadata and the page share one request.
+ */
+export const fetchCandidateExperiences = cache(async (slug: string, locale: string): Promise<CandidateExperiencePage | null> => {
+  try {
+    return await fetchPublic<CandidateExperiencePage>(`/api/companies/public/${encodeURIComponent(slug)}/experiences?page=1`, locale, "fresh");
+  } catch {
+    return null;
+  }
+});
+
 /** Empty when the API is unreachable: the sitemap degrades to its static list, never fails. */
 export async function fetchReviewedSlugs(): Promise<ReviewedCompanySlug[]> {
   try {
@@ -73,6 +92,26 @@ export async function fetchCompanyReviewsConfig(): Promise<CompanyReviewsConfig 
   try {
     const config = await fetchPublic<{ companyReviews?: CompanyReviewsConfig }>("/api/config", "tr", "revalidate");
     return config?.companyReviews ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Which company-page tabs are switched on, read on the server so the tab row is in the HTML the
+ * way the browser will show it. Null if the config is unreachable: the tabs then wait for the
+ * browser's own config read, as they did before.
+ */
+export async function fetchCompanyTabFeatures(): Promise<CompanyTabFeatures | null> {
+  try {
+    const config = await fetchPublic<ClientConfigResponse>("/api/config", "tr", "revalidate");
+    return config === null
+      ? null
+      : {
+          salaries: config.companySalaries?.enabled === true,
+          experiences: config.candidateExperiences?.enabled === true,
+          intelligence: config.companyIntelligence?.enabled === true,
+        };
   } catch {
     return null;
   }
