@@ -36,7 +36,7 @@ RUN dotnet ef migrations bundle \
       --self-contained -r linux-x64 --configuration Release \
       -o /app/efbundle
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0@sha256:12dd273c196e92aa91542749b8df0996f497f812811abba9e6613b484f681dd0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0@sha256:da5846024d0008b48259b53a8953d39381fe5b7ec99ef1449ba4ba927f201490 AS runtime
 WORKDIR /app
 COPY --from=build /app/efbundle ./efbundle
 # The base image ships a non-root "app" user and defaults to root, like the API's. The bundle
