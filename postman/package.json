@@ -10,7 +10,7 @@
     "pack:faker-stub": "npm pack ./faker-stub --pack-destination ."
   },
   "dependencies": {
-    "openapi-to-postmanv2": "6.3.3"
+    "openapi-to-postmanv2": "6.4.0"
   },
   "overrides": {
     "js-yaml": "4.3.2",
