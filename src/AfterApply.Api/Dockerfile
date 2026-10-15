@@ -12,7 +12,7 @@ RUN dotnet restore src/AfterApply.Api/AfterApply.Api.csproj
 COPY src/ src/
 RUN dotnet publish src/AfterApply.Api/AfterApply.Api.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:2d584d8147faddb0d678c5748d47953e5b8e18621ed4fb7049a91381d9d7746f AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:d5633778c754e89a386882eddf8dbee6942447a8a4b8267c19cf1e1158d0b0ac AS runtime
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 8080
